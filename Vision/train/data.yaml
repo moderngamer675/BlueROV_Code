@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 5
+names: ['Glass', 'Metal', 'Paper', 'Plastic', 'Waste']
+
+roboflow:
+  workspace: trash-dataset-for-oriented-bounded-box
+  project: trash-detection-1fjjc
+  version: 14
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/trash-dataset-for-oriented-bounded-box/trash-detection-1fjjc/dataset/14
