@@ -1,128 +1,68 @@
-import tkinter as tk
-from tkinter import messagebox
-import threading
 import time
-from pymavlink import mavutil
 import paramiko
+from pymavlink import mavutil
 
-# --- CONFIGURATION ---
-PI_IP = '192.168.4.101'
+# --- CONFIG ---
+PI_IP = '192.168.2.2'
 PI_USER = 'pi'
 PI_PASS = 'raspberry'
 LAPTOP_IP = '192.168.4.60'
 PORT = 14550
 
-class ROVDashboard:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("BlueROV2 Telemetry Dashboard")
-        self.root.geometry("500x600")
-        self.root.configure(bg="#1e1e1e") # Dark theme
+class AuxSweep:
+    def __init__(self):
+        self.master = None
 
-        self.running = False
-        self.setup_ui()
-
-    def setup_ui(self):
-        # Title
-        tk.Label(self.root, text="ROV TELEMETRY", font=("Arial", 18, "bold"), bg="#1e1e1e", fg="white").pack(pady=10)
-
-        # Status Button
-        self.btn_connect = tk.Button(self.root, text="START MISSION", command=self.toggle_connection, bg="#28a745", fg="white", font=("Arial", 12, "bold"))
-        self.btn_connect.pack(pady=10)
-
-        # Telemetry Display Frames
-        self.data_fields = {
-            "Mode": self.create_data_box("Flight Mode"),
-            "Battery": self.create_data_box("Battery Voltage"),
-            "Heading": self.create_data_box("Heading (Compass)"),
-            "Depth": self.create_data_box("Depth (Meters)"),
-            "Attitude": self.create_data_box("Roll / Pitch"),
-            "GPS": self.create_data_box("GPS Coordinates")
-        }
-
-        self.status_bar = tk.Label(self.root, text="Disconnected", bd=1, relief=tk.SUNKEN, anchor=tk.W)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-
-    def create_data_box(self, label_text):
-        frame = tk.Frame(self.root, bg="#1e1e1e")
-        frame.pack(fill=tk.X, padx=20, pady=5)
+    def start_bridge(self):
+        print(">> Resetting Pi Bridge...")
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(PI_IP, username=PI_USER, password=PI_PASS)
+        ssh.exec_command("sudo pkill -9 -f mavproxy")
+        time.sleep(1)
         
-        lbl = tk.Label(frame, text=label_text, font=("Arial", 10), bg="#1e1e1e", fg="#aaaaaa")
-        lbl.pack(side=tk.LEFT)
+        cmd = (f"nohup /home/pi/rov-env/bin/python3 /home/pi/rov-env/bin/mavproxy.py "
+               f"--master=/dev/ttyACM0 --baudrate=115200 "
+               f"--out=udp:{LAPTOP_IP}:{PORT} --daemon > /dev/null 2>&1 &")
+        ssh.exec_command(cmd)
+        ssh.close()
+
+    def connect(self):
+        self.master = mavutil.mavlink_connection(f'udp:0.0.0.0:{PORT}')
+        self.master.wait_heartbeat()
+        print(">> Connected. Setting MANUAL mode and ARMING...")
+        # Some Pixhawks disable AUX outputs until the system is ARMED
+        self.master.set_mode('MANUAL')
+        self.master.arducopter_arm()
+        time.sleep(1)
+
+    def sweep(self):
+        # Targets: Ch 12 (AUX 4), Ch 13 (AUX 5), Ch 14 (AUX 6)
+        channels = [11, 12, 13] # Indices for 0-based list
         
-        txt = tk.Entry(frame, font=("Consolas", 12, "bold"), bg="#333333", fg="#00ff00", borderwidth=0)
-        txt.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=10)
-        txt.insert(0, "---")
-        return txt
+        print(">> Moving AUX 4, 5, 6 to 1900 PWM...")
+        overrides = [65535] * 18
+        for c in channels:
+            overrides[c] = 1900
+        self.master.mav.rc_channels_override_send(self.master.target_system, self.master.target_component, *overrides)
+        time.sleep(2)
 
-    def update_field(self, field, value):
-        self.data_fields[field].delete(0, tk.END)
-        self.data_fields[field].insert(0, value)
+        print(">> Moving AUX 4, 5, 6 to 1100 PWM...")
+        for c in channels:
+            overrides[c] = 1100
+        self.master.mav.rc_channels_override_send(self.master.target_system, self.master.target_component, *overrides)
+        time.sleep(2)
 
-    def start_mavproxy_remote(self):
-        try:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(PI_IP, username=PI_USER, password=PI_PASS)
-            ssh.exec_command("pkill -f mavproxy")
-            time.sleep(0.5)
-            cmd = (f"cd /home/pi && nohup /home/pi/rov-env/bin/python3 /home/pi/rov-env/bin/mavproxy.py "
-                   f"--master=/dev/ttyACM0 --baudrate=115200 "
-                   f"--out=udp:{LAPTOP_IP}:{PORT} --daemon > /dev/null 2>&1 &")
-            ssh.exec_command(cmd)
-            ssh.close()
-            return True
-        except Exception as e:
-            messagebox.showerror("Connection Error", f"Could not reach Pi: {e}")
-            return False
-
-    def telemetry_loop(self):
-        if not self.start_mavproxy_remote():
-            self.running = False
-            return
-
-        connection_string = f'udp:0.0.0.0:{PORT}'
-        master = mavutil.mavlink_connection(connection_string)
-        self.status_bar.config(text=f"Connected to {PI_IP}", fg="green")
-
-        while self.running:
-            msg = master.recv_match(blocking=False)
-            if msg:
-                msg_type = msg.get_type()
-                
-                if msg_type == 'HEARTBEAT':
-                    mode = mavutil.mode_string_v10(msg)
-                    self.update_field("Mode", mode)
-                
-                elif msg_type == 'SYS_STATUS':
-                    v = msg.voltage_battery / 1000.0
-                    self.update_field("Battery", f"{v:.2f} V")
-                
-                elif msg_type == 'VFR_HUD':
-                    self.update_field("Heading", f"{msg.heading}°")
-                    self.update_field("Depth", f"{abs(msg.alt):.2f} m")
-                
-                elif msg_type == 'ATTITUDE':
-                    r, p = msg.roll * 57.3, msg.pitch * 57.3
-                    self.update_field("Attitude", f"R: {r:.1f}° P: {p:.1f}°")
-                
-                elif msg_type == 'GPS_RAW_INT':
-                    lat, lon = msg.lat/1e7, msg.lon/1e7
-                    self.update_field("GPS", f"{lat:.4f}, {lon:.4f}")
-
-            time.sleep(0.01)
-
-    def toggle_connection(self):
-        if not self.running:
-            self.running = True
-            self.btn_connect.config(text="STOP MISSION", bg="#dc3545")
-            threading.Thread(target=self.telemetry_loop, daemon=True).start()
-        else:
-            self.running = False
-            self.btn_connect.config(text="START MISSION", bg="#28a745")
-            self.status_bar.config(text="Disconnected", fg="black")
+        print(">> Returning to Neutral (1500)...")
+        for c in channels:
+            overrides[c] = 1500
+        self.master.mav.rc_channels_override_send(self.master.target_system, self.master.target_component, *overrides)
+        
+        self.master.arducopter_disarm()
+        print(">> Sweep Complete.")
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = ROVDashboard(root)
-    root.mainloop()
+    test = AuxSweep()
+    test.start_bridge()
+    test.connect()
+    test.sweep()
