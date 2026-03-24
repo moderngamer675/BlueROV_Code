@@ -3,7 +3,7 @@
 # It has more detailed diagnostics
 
 from pymavlink import mavutil
-from rov_config import LAPTOP_IP, PI_IP, MAV_PORT
+from Vision.rov_config import LAPTOP_IP, PI_IP, MAV_PORT
 import socket
 import time
 

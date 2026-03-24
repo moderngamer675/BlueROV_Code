@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 import time
 import subprocess
-from rov_config import (PI_IP, LAPTOP_IP, PI_USERNAME,
+from Vision.rov_config import (PI_IP, LAPTOP_IP, PI_USERNAME,
                         PI_PASSWORD, MAV_PORT, VIDEO_PORT)
 
 PASS = "✅"

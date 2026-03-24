@@ -4,7 +4,7 @@
 # Run with: python rov_tests/test_motors.py
 
 from pymavlink import mavutil
-from rov_config import MAV_PORT
+from Vision.rov_config import MAV_PORT
 import time
 
 # ══════════════════════════════════════════════

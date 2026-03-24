@@ -1,155 +1,281 @@
-import cv2
-import socket
-import numpy as np
+# RobotBackend.py
+# Handles video stream reception and YOLOv8 AI overlay
+# Receives JPEG frames via UDP from camera_stream.py on Pi
+
 import threading
-import paramiko
+import socket
 import time
+import numpy as np
+import cv2
+
+from rov_config import (
+    LAPTOP_IP, VIDEO_PORT,
+    FRAME_WIDTH, FRAME_HEIGHT,
+    YOLO_MODEL, YOLO_CONFIDENCE, YOLO_ENABLED
+)
+
 
 class RobotLogic:
-    def __init__(self, log_callback):
-        # --- Connection Config (WIRED TETHER) ---
-        self.pi_ip = '192.168.2.2'      # The Fathom-X IP
-        self.username = 'pi'
-        self.password = 'raspberry'
-        self.laptop_ip = '192.168.2.1'  # Your Laptop's Wired IP
-        self.video_port = 5000          # Port for Camera
-        self.mav_port = 14550           # Port for Telemetry
-        
-        # --- App State ---
-        self.running = False
-        self.latest_frame = None
-        self.log = log_callback 
-        self.stream_active = False      # Track if we have video or not
-        
-        # --- AI Settings ---
-        self.confidence_threshold = 0.4
 
+    def __init__(self, log_callback):
+        self._log          = log_callback
+        self.running       = False
+        self.latest_frame  = None
+        self._thread       = None
+        self._stop         = threading.Event()
+        self._frame_count  = 0
+        self._fps          = 0.0
+        self._last_fps_t   = time.time()
+
+        # YOLO
+        self._yolo         = None
+        self._yolo_enabled = YOLO_ENABLED
+        self._yolo_loaded  = False
+
+    # =========================================================================
+    #  START / STOP
+    # =========================================================================
     def start(self):
-        if not self.running:
-            self.running = True
-            thread = threading.Thread(target=self.run_process, daemon=True)
-            thread.start()
+        self._stop.clear()
+        self.running = True
+
+        # Load YOLO in background so GUI doesn't freeze
+        if self._yolo_enabled:
+            threading.Thread(
+                target=self._load_yolo,
+                daemon=True,
+                name="YOLOLoader"
+            ).start()
+
+        self._thread = threading.Thread(
+            target=self._video_loop,
+            daemon=True,
+            name="VideoThread"
+        )
+        self._thread.start()
+        self._log("Video backend started.")
 
     def stop(self):
+        self._log("Stopping video backend...")
+        self._stop.set()
         self.running = False
-        self.log("System shutdown initiated.")
+        if self._thread:
+            self._thread.join(timeout=3)
+        self._log("Video backend stopped.")
 
-    def _trigger_remote_services(self):
-        """
-        Starts both the Camera and MAVProxy on the Pi via SSH.
-        """
+    # =========================================================================
+    #  YOLO LOADER
+    # =========================================================================
+    def _load_yolo(self):
         try:
-            self.log(f"Connecting to Pi ({self.pi_ip}) via SSH...")
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(self.pi_ip, username=self.username, password=self.password, timeout=5)
-            
-            # 1. KILL OLD PROCESSES
-            self.log("Cleaning up old background services...")
-            ssh.exec_command("pkill -f mavproxy; pkill -f python3")
-            time.sleep(1.0) 
-
-            # 2. START CAMERA
-            self.log("Starting Remote Camera Stream...")
-            cam_cmd = f"nohup /home/pi/rov-env/bin/python3 /home/pi/camera_stream.py > /dev/null 2>&1 &"
-            ssh.exec_command(cam_cmd)
-            
-            # 3. START TELEMETRY (Dual Stream)
-            self.log("Starting Telemetry Bridge (Dual Output)...")
-            # Output 1 -> Port 14550 (Standard, for QGroundControl)
-            # Output 2 -> Port 14551 (Custom, for this Python App)
-            mav_cmd = (f"cd /home/pi && nohup /home/pi/rov-env/bin/python3 /home/pi/rov-env/bin/mavproxy.py "
-                       f"--master=/dev/ttyACM0 --baudrate=115200 "
-                       f"--out=udp:{self.laptop_ip}:14550 "
-                       f"--out=udp:{self.laptop_ip}:14551 "
-                       f"--daemon > /dev/null 2>&1 &")
-            ssh.exec_command(mav_cmd)
-            
-            ssh.close()
-            self.log("Remote Services Started Successfully.")
-            return True
-        except Exception as e:
-            self.log(f"SSH Connection Failed: {e}")
-            return False
-
-    def run_process(self):
-        # --- LAZY LOAD YOLO ---
-        self.log("Initializing AI Engine (this may take 5s)...")
-        try:
+            self._log(f"Loading YOLO model: {YOLO_MODEL}...")
             from ultralytics import YOLO
-            self.log("YOLO Library Loaded.")
+            self._yolo = YOLO(YOLO_MODEL)
+            self._yolo_loaded = True
+            self._log(f"✅ YOLO model loaded.")
         except ImportError:
-            self.log("Error: Ultralytics not found. AI features disabled.")
-            return
-        
-        # Trigger the Pi
-        if not self._trigger_remote_services():
-            self.log("Critical Error: Could not start Pi services.")
-            return
+            self._log("⚠️  ultralytics not installed — YOLO disabled")
+            self._log("    pip install ultralytics")
+            self._yolo_enabled = False
+        except Exception as e:
+            self._log(f"⚠️  YOLO load failed: {e}")
+            self._yolo_enabled = False
 
+    # =========================================================================
+    #  VIDEO RECEIVE LOOP
+    # =========================================================================
+    def _video_loop(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1048576) 
-        sock.bind(('0.0.0.0', self.video_port))
+        sock.setsockopt(
+            socket.SOL_SOCKET, socket.SO_RCVBUF, 131072
+        )
+        try:
+            sock.bind(('0.0.0.0', VIDEO_PORT))
+            self._log(f"Video socket bound on port {VIDEO_PORT}")
+        except OSError as e:
+            self._log(f"❌ Cannot bind video port {VIDEO_PORT}: {e}")
+            self._log("    Is another app using this port?")
+            self.running = False
+            return
+
         sock.settimeout(2.0)
+        self._log(f"Waiting for video stream from Pi...")
 
-        self.log(f"Loading Neural Network Model...")
-        model = YOLO('yolov8n.pt') 
-        self.log("AI Ready. Waiting for Video Feed...")
+        stream_started = False
 
-        frame_count = 0
-        ai_frequency = 5 
-        results = None
-
-        while self.running:
+        while not self._stop.is_set():
             try:
-                try:
-                    data, _ = sock.recvfrom(65536)
-                except ConnectionResetError:
-                    time.sleep(0.1)
+                data, addr = sock.recvfrom(131072)
+
+                if not stream_started:
+                    self._log(f"✅ Video stream received from {addr[0]}")
+                    stream_started = True
+
+                # Decode JPEG
+                frame = cv2.imdecode(
+                    np.frombuffer(data, np.uint8),
+                    cv2.IMREAD_COLOR
+                )
+
+                if frame is None:
                     continue
-                
-                # --- LOGGING: Confirm Video Connection ---
-                if not self.stream_active:
-                    self.stream_active = True
-                    self.log("Video Stream ESTABLISHED (Connection Good).")
 
-                frame = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+                # Resize to standard dimensions
+                frame = cv2.resize(
+                    frame,
+                    (FRAME_WIDTH, FRAME_HEIGHT),
+                    interpolation=cv2.INTER_LINEAR
+                )
 
-                if frame is not None:
-                    try:
-                        frame_count += 1
-                        if frame_count % ai_frequency == 0:
-                            small_frame = cv2.resize(frame, (320, 240))
-                            results = model(small_frame, verbose=False)
-                            frame_count = 0
+                # Run YOLO if loaded
+                if self._yolo_enabled and self._yolo_loaded:
+                    frame = self._run_yolo(frame)
+                elif self._yolo_enabled and not self._yolo_loaded:
+                    # Show loading overlay
+                    cv2.putText(
+                        frame, "AI: Loading...",
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6, (0, 200, 255), 2
+                    )
 
-                        if results:
-                            for r in results:
-                                for box in r.boxes:
-                                    if float(box.conf[0]) > self.confidence_threshold:
-                                        x1, y1, x2, y2 = map(int, box.xyxy[0])
-                                        x1, x2 = x1 * 2, x2 * 2
-                                        y1, y2 = y1 * 2, y2 * 2
-                                        
-                                        cls = int(box.cls[0])
-                                        label = f"{model.names[cls]} {float(box.conf[0]):.2f}"
+                # Add HUD overlay
+                frame = self._draw_hud(frame)
 
-                                        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                                        (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-                                        cv2.rectangle(frame, (x1, y1 - 20), (x1 + w, y1), (0, 255, 0), -1)
-                                        cv2.putText(frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-                    except Exception as ai_err:
-                        # Log error to GUI instead of crashing
-                        self.log(f"AI Error: {ai_err}")
+                # Update latest frame
+                self.latest_frame = frame
+                self._frame_count += 1
 
-                    self.latest_frame = frame
+                # Calculate FPS
+                now = time.time()
+                if now - self._last_fps_t >= 1.0:
+                    self._fps = self._frame_count / (
+                        now - self._last_fps_t
+                    )
+                    self._frame_count = 0
+                    self._last_fps_t  = now
 
             except socket.timeout:
-                # --- LOGGING: Alert if stream dies ---
-                if self.stream_active:
-                    self.log("Warning: Video Stream LOST. Attempting to reconnect...")
-                    self.stream_active = False
-                
-                # If video drops, nudge the Pi again
-                sock.sendto(b"START_STREAM", (self.pi_ip, self.video_port))
+                if stream_started:
+                    self._log("⚠️  Video stream timeout — waiting...")
+                    stream_started = False
                 continue
+            except Exception as e:
+                if not self._stop.is_set():
+                    self._log(f"Video error: {e}")
+                continue
+
+        sock.close()
+        self._log("Video socket closed.")
+
+    # =========================================================================
+    #  YOLO INFERENCE
+    # =========================================================================
+    def _run_yolo(self, frame: np.ndarray) -> np.ndarray:
+        """
+        Run YOLOv8 inference and draw bounding boxes.
+        Returns frame with detections drawn.
+        """
+        try:
+            results = self._yolo(
+                frame,
+                conf=YOLO_CONFIDENCE,
+                verbose=False
+            )
+
+            for result in results:
+                boxes = result.boxes
+                if boxes is None:
+                    continue
+
+                for box in boxes:
+                    # Bounding box coords
+                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                    x1, y1 = int(x1), int(y1)
+                    x2, y2 = int(x2), int(y2)
+
+                    conf  = float(box.conf[0])
+                    cls   = int(box.cls[0])
+                    label = result.names.get(cls, str(cls))
+
+                    # Draw box
+                    cv2.rectangle(
+                        frame, (x1, y1), (x2, y2),
+                        (0, 200, 255), 2
+                    )
+
+                    # Label background
+                    label_txt = f"{label} {conf:.2f}"
+                    (tw, th), _ = cv2.getTextSize(
+                        label_txt,
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, 1
+                    )
+                    cv2.rectangle(
+                        frame,
+                        (x1, y1 - th - 8),
+                        (x1 + tw + 4, y1),
+                        (0, 200, 255), -1
+                    )
+                    cv2.putText(
+                        frame, label_txt,
+                        (x1 + 2, y1 - 4),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (0, 0, 0), 1
+                    )
+
+        except Exception as e:
+            # Don't crash on YOLO errors
+            cv2.putText(
+                frame, f"AI ERR: {str(e)[:30]}",
+                (10, 60),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.4, (0, 0, 255), 1
+            )
+
+        return frame
+
+    # =========================================================================
+    #  HUD OVERLAY
+    # =========================================================================
+    def _draw_hud(self, frame: np.ndarray) -> np.ndarray:
+        """Draw minimal HUD info on the video frame."""
+        h, w = frame.shape[:2]
+
+        # FPS counter top-right
+        fps_txt = f"FPS: {self._fps:.1f}"
+        cv2.putText(
+            frame, fps_txt,
+            (w - 100, 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5, (0, 255, 200), 1
+        )
+
+        # AI status top-left
+        if self._yolo_enabled and self._yolo_loaded:
+            ai_txt = "AI: ON"
+            ai_col = (0, 200, 255)
+        elif self._yolo_enabled:
+            ai_txt = "AI: LOADING"
+            ai_col = (0, 200, 100)
+        else:
+            ai_txt = "AI: OFF"
+            ai_col = (100, 100, 100)
+
+        cv2.putText(
+            frame, ai_txt,
+            (10, 20),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5, ai_col, 1
+        )
+
+        # Timestamp bottom-left
+        ts = time.strftime("%H:%M:%S")
+        cv2.putText(
+            frame, ts,
+            (10, h - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.4, (150, 150, 150), 1
+        )
+
+        return frame

@@ -2,7 +2,7 @@
 # Checks if ArduSub is disarming between motor tests
 
 from pymavlink import mavutil
-from rov_config import MAV_PORT
+from Vision.rov_config import MAV_PORT
 import time
 
 mav = mavutil.mavlink_connection(
