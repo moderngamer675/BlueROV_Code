@@ -3,7 +3,7 @@
 # Run with: python rov_tests/check_battery.py
 
 from pymavlink import mavutil
-from Vision.rov_config import MAV_PORT
+from rov_config import MAV_PORT
 import time
 
 print("Checking battery configuration...")
