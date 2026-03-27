@@ -1,0 +1,25 @@
+PIXHAWK QUICK REFERENCE CHEAT SHEET
+Generated: 2026-03-27 13:24:36
+============================================================
+
+SYSTEM:
+  autopilot: ARDUPILOTMEGA
+  vehicle_type: SUBMARINE
+  base_mode: 81
+  custom_mode: 19
+  fw_version: 4.5.7
+  fw_type: OFFICIAL
+  capabilities: 63975
+
+FLIGHT MODES:
+    0: STABILIZE
+    1: ACRO
+    2: ALT_HOLD
+    3: AUTO
+    4: GUIDED
+    7: CIRCLE
+    9: SURFACE
+   16: POSHOLD
+   19: MANUAL
+
+COMMAND SUPPORT:
