@@ -1,20 +1,18 @@
-# rov_tests/post_reboot_test.py
-# ═══════════════════════════════════════════════════════════════════════
-# POST-REBOOT FRAME CONFIG VERIFICATION & MOTOR TEST
-# ═══════════════════════════════════════════════════════════════════════
-# Run this AFTER you have:
-#   1. Changed FRAME_CONFIG to your desired value
-#   2. Power cycled the Pixhawk (disconnected/reconnected LiPo)
-#   3. Waited 30 seconds for full boot
-#
-# This script will:
-#   1. Connect fresh
-#   2. Verify FRAME_CONFIG and servo assignments
-#   3. Check servo baselines (are all 4 channels alive?)
-#   4. Arm the vehicle
-#   5. Test every MANUAL_CONTROL axis
-#   6. Report which channels respond to what
-# ═══════════════════════════════════════════════════════════════════════
+#!/usr/bin/env python3
+"""
+mixing_matrix_diagnostic.py  (v2 — fixed ESC deadband issue)
+
+Sends single-axis MANUAL_CONTROL commands and captures SERVO_OUTPUT_RAW
+to verify the mixing matrix AND confirm physical motor spin.
+
+v2 changes:
+  - Thrust increased to 250/1000 to overcome ESC deadband
+  - Pre-flight check confirms motors actually spin before full suite
+  - Pulse reduced to 1.5s for bench safety at higher thrust
+  - Reports actual PWM values so you can see deadband clearance
+
+Uses proven connection/arm/neutral-hold patterns from motor_identify.py.
+"""
 
 from pymavlink import mavutil
 import time
@@ -26,14 +24,53 @@ try:
 except ImportError:
     MAV_PORT = 14551
 
-THRUST = 100
-SPIN_SECS = 3.0
-SETTLE_SECS = 2.0
-NOISE_FLOOR = 15
+# ─── CONFIGURATION ──────────────────────────────────────────────────────────
+THRUST_VALUE    = 250       # 25% — enough to clear ESC deadband on single axis
+PULSE_DURATION  = 1.5       # seconds per test (shorter due to higher thrust)
+SETTLE_SECS     = 2.0       # seconds of neutral between tests
+PWM_NEUTRAL     = 1500
+PWM_DEADBAND    = 25        # ESC won't spin below this deviation from 1500
+# ────────────────────────────────────────────────────────────────────────────
+
+# Motor layout reference (from verified memo)
+MOTOR_MAP = {
+    1: "BR (CCW)",
+    2: "BL (CW)",
+    3: "FR (CW)",
+    4: "FL (CCW)",
+}
+
+# Test sequence: (name, x, y, z, r)
+TEST_SEQUENCE = [
+    ("FORWARD",       +THRUST_VALUE,  0,              500,  0),
+    ("BACKWARD",      -THRUST_VALUE,  0,              500,  0),
+    ("STRAFE RIGHT",  0,              +THRUST_VALUE,  500,  0),
+    ("STRAFE LEFT",   0,              -THRUST_VALUE,  500,  0),
+    ("YAW CW",        0,              0,              500,  +THRUST_VALUE),
+    ("YAW CCW",       0,              0,              500,  -THRUST_VALUE),
+]
+
+# Known mixing matrix from FRAME_CONFIG=1 (verified)
+MIXING_MATRIX = {
+    1: {"fwd": -1, "lat": +1, "yaw": +1},  # BR CCW
+    2: {"fwd": -1, "lat": -1, "yaw": -1},  # BL CW
+    3: {"fwd": +1, "lat": +1, "yaw": -1},  # FR CW
+    4: {"fwd": +1, "lat": -1, "yaw": +1},  # FL CCW
+}
+
+# Expected channel behavior for each test (UP or DN)
+EXPECTED_DIRS = {
+    "FORWARD":      {"ch1": "DN", "ch2": "DN", "ch3": "UP", "ch4": "UP"},
+    "BACKWARD":     {"ch1": "UP", "ch2": "UP", "ch3": "DN", "ch4": "DN"},
+    "STRAFE RIGHT": {"ch1": "UP", "ch2": "DN", "ch3": "UP", "ch4": "DN"},
+    "STRAFE LEFT":  {"ch1": "DN", "ch2": "UP", "ch3": "DN", "ch4": "UP"},
+    "YAW CW":       {"ch1": "UP", "ch2": "DN", "ch3": "DN", "ch4": "UP"},
+    "YAW CCW":      {"ch1": "DN", "ch2": "UP", "ch3": "UP", "ch4": "DN"},
+}
 
 
 # ═════════════════════════════════════════════════════════════════════
-#  CONNECTION
+#  CONNECTION (proven working)
 # ═════════════════════════════════════════════════════════════════════
 
 def connect():
@@ -58,7 +95,7 @@ def connect():
 
 
 # ═════════════════════════════════════════════════════════════════════
-#  NEUTRAL HOLD
+#  NEUTRAL HOLD (proven working)
 # ═════════════════════════════════════════════════════════════════════
 
 class NeutralHold:
@@ -78,7 +115,8 @@ class NeutralHold:
 
     def cmd(self, x=0, y=0, z=500, r=0):
         with self._lock:
-            T = 150
+            # Allow up to 400 for diagnostic tests
+            T = 400
             self._x = max(-T, min(T, int(x)))
             self._y = max(-T, min(T, int(y)))
             self._z = max(0, min(1000, int(z)))
@@ -97,7 +135,7 @@ class NeutralHold:
 
 
 # ═════════════════════════════════════════════════════════════════════
-#  ARM / DISARM
+#  ARM / DISARM (proven working)
 # ═════════════════════════════════════════════════════════════════════
 
 def arm_vehicle(mav, max_retries=3):
@@ -105,7 +143,7 @@ def arm_vehicle(mav, max_retries=3):
         print(f"\n  -- ARM ATTEMPT {attempt}/{max_retries} --")
         mode_id = mav.mode_mapping().get('MANUAL')
         if mode_id is None:
-            print(f"  MANUAL not in mode mapping!")
+            print("  ERROR: MANUAL mode not found in mode mapping!")
             return False
 
         mav.mav.set_mode_send(
@@ -120,13 +158,10 @@ def arm_vehicle(mav, max_retries=3):
             0, 1, 21196, 0, 0, 0, 0, 0)
 
         ack = mav.recv_match(type='COMMAND_ACK', blocking=True, timeout=5)
-        if ack:
-            if ack.result != 0:
-                print(f"  ACK result={ack.result} -- retrying...")
-                time.sleep(2)
-                continue
-            else:
-                print(f"  ACK: ACCEPTED")
+        if ack and ack.result != 0:
+            print(f"  ARM rejected (result={ack.result}), retrying...")
+            time.sleep(2)
+            continue
 
         time.sleep(2)
         for _ in range(5):
@@ -135,7 +170,6 @@ def arm_vehicle(mav, max_retries=3):
                 print(f"  Armed on attempt {attempt}")
                 return True
 
-        print(f"  Not armed on attempt {attempt}")
         time.sleep(2)
     return False
 
@@ -149,58 +183,406 @@ def disarm_vehicle(mav):
 
 
 # ═════════════════════════════════════════════════════════════════════
-#  PARAMETER READ
+#  SERVO DATA HELPERS
 # ═════════════════════════════════════════════════════════════════════
 
-def read_param(mav, name, timeout=3):
-    mav.mav.param_request_read_send(
-        mav.target_system, mav.target_component,
-        name.encode('utf-8'), -1)
-    msg = mav.recv_match(type='PARAM_VALUE', blocking=True, timeout=timeout)
+def request_servo_stream(mav):
+    """Request SERVO_OUTPUT_RAW at 10Hz."""
+    print("  Requesting SERVO_OUTPUT_RAW stream at 10Hz...")
+    mav.mav.request_data_stream_send(
+        mav.target_system,
+        mav.target_component,
+        mavutil.mavlink.MAV_DATA_STREAM_RC_CHANNELS,
+        10, 1)
+    msg = mav.recv_match(type='SERVO_OUTPUT_RAW', blocking=True, timeout=5)
     if msg:
-        return msg.param_value
-    return None
+        print(f"  Stream active: Ch1={msg.servo1_raw} Ch2={msg.servo2_raw} "
+              f"Ch3={msg.servo3_raw} Ch4={msg.servo4_raw}")
+    else:
+        print("  WARNING: No SERVO_OUTPUT_RAW received!")
 
 
-# ═════════════════════════════════════════════════════════════════════
-#  SERVO MONITORING
-# ═════════════════════════════════════════════════════════════════════
-
-def drain_messages(mav, duration=0.3):
-    end = time.time() + duration
-    while time.time() < end:
-        mav.recv_match(type='SERVO_OUTPUT_RAW', blocking=False)
-        time.sleep(0.01)
-
-
-def read_baseline(mav, duration=1.0):
-    readings = {i: [] for i in range(1, 9)}
-    end = time.time() + duration
-    while time.time() < end:
-        msg = mav.recv_match(type='SERVO_OUTPUT_RAW',
-                             blocking=True, timeout=0.2)
-        if msg:
-            for i in range(1, 9):
-                readings[i].append(getattr(msg, f'servo{i}_raw'))
-        time.sleep(0.05)
-    return {i: (sum(v) / len(v) if v else 0) for i, v in readings.items()}
-
-
-def monitor_deltas(mav, baseline, duration):
-    peaks = {i: 0.0 for i in range(1, 9)}
+def flush_servo_messages(mav):
+    """Drain any queued SERVO_OUTPUT_RAW messages."""
     count = 0
-    end = time.time() + duration
-    while time.time() < end:
-        msg = mav.recv_match(type='SERVO_OUTPUT_RAW',
-                             blocking=True, timeout=0.2)
+    while mav.recv_match(type='SERVO_OUTPUT_RAW', blocking=False):
+        count += 1
+    return count
+
+
+def capture_servo_during_command(mav, nh, x, y, z, r, duration):
+    """
+    Send a command via NeutralHold and capture SERVO_OUTPUT_RAW.
+    Returns list of sample dicts.
+    """
+    flush_servo_messages(mav)
+    nh.cmd(x=x, y=y, z=z, r=r)
+
+    samples = []
+    deadline = time.time() + duration
+    while time.time() < deadline:
+        msg = mav.recv_match(type='SERVO_OUTPUT_RAW', blocking=True, timeout=0.2)
         if msg:
-            count += 1
-            for i in range(1, 9):
-                pwm = getattr(msg, f'servo{i}_raw')
-                delta = pwm - baseline[i]
-                if abs(delta) > abs(peaks[i]):
-                    peaks[i] = delta
-    return peaks, count
+            samples.append({
+                'time': time.time(),
+                'ch1': msg.servo1_raw,
+                'ch2': msg.servo2_raw,
+                'ch3': msg.servo3_raw,
+                'ch4': msg.servo4_raw,
+            })
+
+    nh.neutral()
+    return samples
+
+
+# ═════════════════════════════════════════════════════════════════════
+#  PRE-FLIGHT MOTOR CHECK
+# ═════════════════════════════════════════════════════════════════════
+
+def preflight_motor_check(mav, nh):
+    """
+    Send a brief forward command and verify PWM deviations exceed
+    the ESC deadband. Returns True if motors should spin.
+    """
+    print("\n  ┌────────────────────────────────────────────────┐")
+    print("  │ PRE-FLIGHT CHECK: Verifying ESC deadband       │")
+    print("  │ Sending FORWARD at thrust=250 for 1 second...  │")
+    print("  └────────────────────────────────────────────────┘")
+
+    # Capture neutral baseline first
+    flush_servo_messages(mav)
+    nh.neutral()
+    time.sleep(0.5)
+    baseline = mav.recv_match(type='SERVO_OUTPUT_RAW', blocking=True, timeout=2)
+    if baseline:
+        print(f"  Neutral baseline: Ch1={baseline.servo1_raw} Ch2={baseline.servo2_raw} "
+              f"Ch3={baseline.servo3_raw} Ch4={baseline.servo4_raw}")
+    else:
+        print(f"  WARNING: No baseline — continuing anyway")
+
+    # Send forward pulse
+    samples = capture_servo_during_command(
+        mav, nh, x=THRUST_VALUE, y=0, z=500, r=0, duration=1.0)
+
+    if not samples:
+        print("  ERROR: No servo samples captured during pre-flight!")
+        return False
+
+    # Check deviations
+    max_dev = 0
+    print(f"\n  Pre-flight results ({len(samples)} samples):")
+    for i in range(1, 5):
+        ch_key = f'ch{i}'
+        values = [s[ch_key] for s in samples]
+        avg = sum(values) / len(values)
+        dev = abs(avg - PWM_NEUTRAL)
+        max_dev = max(max_dev, dev)
+        above_db = "YES - WILL SPIN" if dev > PWM_DEADBAND else "NO  - IN DEADBAND"
+        print(f"    Ch{i} {MOTOR_MAP[i]:<12s}: avg={avg:7.1f}  dev={dev:+6.1f}  "
+              f"above deadband({PWM_DEADBAND}): {above_db}")
+
+    if max_dev > PWM_DEADBAND:
+        print(f"\n  PRE-FLIGHT PASSED: Max deviation = {max_dev:.1f} "
+              f"(deadband = {PWM_DEADBAND})")
+        print(f"  Motors SHOULD physically spin during tests.")
+        return True
+    else:
+        print(f"\n  PRE-FLIGHT FAILED: Max deviation = {max_dev:.1f} "
+              f"(deadband = {PWM_DEADBAND})")
+        print(f"  Motors will NOT spin! Thrust value needs to be higher.")
+        print(f"  Current THRUST_VALUE = {THRUST_VALUE}")
+        print(f"  Try increasing to {THRUST_VALUE * 2} and re-run.")
+        return False
+
+
+# ═════════════════════════════════════════════════════════════════════
+#  ANALYSIS
+# ═════════════════════════════════════════════════════════════════════
+
+def analyze_samples(test_name, x, y, z, r, samples):
+    """Analyze captured servo data and produce a diagnostic block."""
+    if not samples:
+        print(f"  WARNING: No SERVO_OUTPUT_RAW samples for {test_name}!")
+        return None
+
+    avg = {}
+    for ch in ['ch1', 'ch2', 'ch3', 'ch4']:
+        values = [s[ch] for s in samples]
+        avg[ch] = sum(values) / len(values)
+
+    dev = {}
+    for ch in ['ch1', 'ch2', 'ch3', 'ch4']:
+        dev[ch] = avg[ch] - PWM_NEUTRAL
+
+    def dir_label(d):
+        if d > 5:
+            return f"UP   (+{d:5.1f})"
+        elif d < -5:
+            return f"DOWN ({d:6.1f})"
+        else:
+            return f"IDLE ({d:+5.1f})"
+
+    def dir_code(d):
+        if d > 5:
+            return "UP"
+        elif d < -5:
+            return "DN"
+        else:
+            return "--"
+
+    def spin_status(d):
+        """Will the ESC actually spin at this deviation?"""
+        if abs(d) > PWM_DEADBAND:
+            return "SPINNING"
+        elif abs(d) > 5:
+            return "DEADBAND"
+        else:
+            return "IDLE"
+
+    result = {
+        'test': test_name,
+        'command': f"x={x:+5d}, y={y:+5d}, z={z:4d}, r={r:+5d}",
+        'samples': len(samples),
+        'channels': {},
+    }
+
+    print(f"\n  +{'='*71}+")
+    print(f"  | TEST: {test_name:<64s}|")
+    print(f"  | Command: x={x:+5d}, y={y:+5d}, z={z:4d}, r={r:+5d}"
+          f"{'':>30s}|")
+    print(f"  | Samples: {len(samples):<61d}|")
+    print(f"  +{'-'*71}+")
+    print(f"  | {'Channel':<15s} | {'PWM':>7s} | {'Delta':>7s} | "
+          f"{'Direction':<10s} | {'ESC Status':<12s} |")
+    print(f"  +{'-'*71}+")
+
+    for i in range(1, 5):
+        ch_key = f'ch{i}'
+        a = avg[ch_key]
+        d = dev[ch_key]
+        dl = dir_label(d)
+        dc = dir_code(d)
+        ss = spin_status(d)
+        motor_label = MOTOR_MAP[i]
+        print(f"  | Ch{i} {motor_label:<10s} | {a:7.1f} | {d:+7.1f} | "
+              f"{dc:<10s} | {ss:<12s} |")
+        result['channels'][ch_key] = {
+            'motor': motor_label,
+            'avg_pwm': round(a, 1),
+            'deviation': round(d, 1),
+            'dir_code': dc,
+            'spinning': ss == "SPINNING",
+        }
+
+    print(f"  +{'='*71}+")
+    return result
+
+
+# ═════════════════════════════════════════════════════════════════════
+#  RUN SINGLE TEST
+# ═════════════════════════════════════════════════════════════════════
+
+def run_single_test(mav, nh, test_name, x, y, z, r):
+    """Run one axis test: settle, command, capture, analyze."""
+    print(f"\n{'='*65}")
+    print(f"  PREPARING: {test_name}")
+    print(f"  Command: x={x:+5d}, y={y:+5d}, z={z:4d}, r={r:+5d}")
+    thrust_pct = abs(max(abs(x), abs(y), abs(r))) / 10
+    print(f"  Thrust: {thrust_pct:.1f}% for {PULSE_DURATION}s")
+    print(f"{'='*65}")
+
+    # Settle at neutral
+    print(f"  Settling at neutral for {SETTLE_SECS}s...")
+    nh.neutral()
+    time.sleep(SETTLE_SECS)
+
+    # Capture neutral baseline
+    flush_servo_messages(mav)
+    time.sleep(0.3)
+    baseline_msg = mav.recv_match(type='SERVO_OUTPUT_RAW', blocking=True, timeout=2)
+    if baseline_msg:
+        print(f"  Baseline: Ch1={baseline_msg.servo1_raw} Ch2={baseline_msg.servo2_raw} "
+              f"Ch3={baseline_msg.servo3_raw} Ch4={baseline_msg.servo4_raw}")
+
+    # Run command and capture
+    print(f"  SENDING {test_name} for {PULSE_DURATION}s...")
+    samples = capture_servo_during_command(mav, nh, x, y, z, r, PULSE_DURATION)
+    print(f"  Done. Captured {len(samples)} samples.")
+
+    # Analyze
+    result = analyze_samples(test_name, x, y, z, r, samples)
+    return result
+
+
+# ═════════════════════════════════════════════════════════════════════
+#  FINAL SUMMARY
+# ═════════════════════════════════════════════════════════════════════
+
+def print_final_summary(results):
+    """Print a complete, copy-paste-friendly diagnostic summary."""
+    valid = [r for r in results if r is not None]
+    if not valid:
+        print("\n  ERROR: No valid test results to summarize!")
+        return
+
+    # Count how many motors actually spun
+    total_spins = 0
+    total_expected = 0
+    for r in valid:
+        for ch_key in ['ch1', 'ch2', 'ch3', 'ch4']:
+            ch = r['channels'][ch_key]
+            if abs(ch['deviation']) > 5:  # was supposed to move
+                total_expected += 1
+                if ch['spinning']:
+                    total_spins += 1
+
+    print("\n")
+    print("=" * 75)
+    print("  MIXING MATRIX DIAGNOSTIC SUMMARY")
+    print("  Frame Config: 1 (SimpleROV-3/Vectored)")
+    print(f"  Thrust level: {THRUST_VALUE}/1000 ({THRUST_VALUE/10:.1f}%)")
+    print(f"  Pulse duration: {PULSE_DURATION}s per test")
+    print(f"  ESC deadband threshold: ±{PWM_DEADBAND} from {PWM_NEUTRAL}")
+    print(f"  Motor layout: Ch1=BR(CCW) Ch2=BL(CW) Ch3=FR(CW) Ch4=FL(CCW)")
+    print(f"  Motors physically spinning: {total_spins}/{total_expected} expected responses")
+    print("=" * 75)
+
+    # ── RAW RESULTS TABLE ──
+    print(f"\n  {'Test':<16s} | {'Ch1 BR':>11s} | {'Ch2 BL':>11s} | "
+          f"{'Ch3 FR':>11s} | {'Ch4 FL':>11s} | {'N':>3s} | Spinning?")
+    print(f"  {'-'*16}-+-{'-'*11}-+-{'-'*11}-+-{'-'*11}-+-{'-'*11}-+-"
+          f"{'-'*3}-+-{'-'*10}")
+
+    for r in valid:
+        ch = r['channels']
+
+        def fmt(ch_key):
+            d = ch[ch_key]['deviation']
+            if d > 5:
+                return f"+{d:5.1f} UP"
+            elif d < -5:
+                return f"{d:6.1f} DN"
+            else:
+                return f"{d:+5.1f} --"
+
+        spinning_count = sum(1 for k in ['ch1','ch2','ch3','ch4']
+                           if ch[k]['spinning'])
+
+        print(f"  {r['test']:<16s} | {fmt('ch1'):>11s} | {fmt('ch2'):>11s} | "
+              f"{fmt('ch3'):>11s} | {fmt('ch4'):>11s} | {r['samples']:>3d} | "
+              f"{spinning_count}/4 motors")
+
+    # ── EXPECTED TABLE ──
+    print(f"\n  EXPECTED (from firmware mixing matrix):")
+    print(f"  {'Test':<16s} | {'Ch1 BR':>8s} | {'Ch2 BL':>8s} | "
+          f"{'Ch3 FR':>8s} | {'Ch4 FL':>8s}")
+    print(f"  {'-'*16}-+-{'-'*8}-+-{'-'*8}-+-{'-'*8}-+-{'-'*8}")
+    expected_display = [
+        ("FORWARD",      "DOWN", "DOWN", "UP",   "UP"),
+        ("BACKWARD",     "UP",   "UP",   "DOWN", "DOWN"),
+        ("STRAFE RIGHT", "UP",   "DOWN", "UP",   "DOWN"),
+        ("STRAFE LEFT",  "DOWN", "UP",   "DOWN", "UP"),
+        ("YAW CW",       "UP",   "DOWN", "DOWN", "UP"),
+        ("YAW CCW",      "DOWN", "UP",   "UP",   "DOWN"),
+    ]
+    for name, e1, e2, e3, e4 in expected_display:
+        print(f"  {name:<16s} | {e1:>8s} | {e2:>8s} | {e3:>8s} | {e4:>8s}")
+
+    # ── MATCH ANALYSIS ──
+    print(f"\n  ACTUAL vs EXPECTED DIRECTION MATCH:")
+    print(f"  {'Test':<16s} | {'Ch1':>5s} | {'Ch2':>5s} | {'Ch3':>5s} | "
+          f"{'Ch4':>5s} | {'Verdict':<10s}")
+    print(f"  {'-'*16}-+-{'-'*5}-+-{'-'*5}-+-{'-'*5}-+-{'-'*5}-+-{'-'*10}")
+
+    all_match = True
+    for r in valid:
+        test = r['test']
+        if test not in EXPECTED_DIRS:
+            continue
+        exp = EXPECTED_DIRS[test]
+        ch = r['channels']
+
+        matches = {}
+        for ch_key in ['ch1', 'ch2', 'ch3', 'ch4']:
+            actual_dc = ch[ch_key]['dir_code']
+            expected_dc = exp[ch_key]
+            if actual_dc == '--':
+                matches[ch_key] = '?'
+            elif actual_dc == expected_dc:
+                matches[ch_key] = 'YES'
+            else:
+                matches[ch_key] = 'NO'
+                all_match = False
+
+        all_yes = all(v == 'YES' for v in matches.values())
+        verdict = "MATCH" if all_yes else "MISMATCH"
+        if any(v == '?' for v in matches.values()):
+            verdict = "PARTIAL"
+
+        print(f"  {test:<16s} | {matches['ch1']:>5s} | {matches['ch2']:>5s} | "
+              f"{matches['ch3']:>5s} | {matches['ch4']:>5s} | {verdict:<10s}")
+
+    print(f"  {'-'*16}-+-{'-'*5}-+-{'-'*5}-+-{'-'*5}-+-{'-'*5}-+-{'-'*10}")
+
+    # ── PHYSICAL OBSERVATION SECTION ──
+    print(f"""
+  PHYSICAL OBSERVATION CHECKLIST:
+  ═══════════════════════════════════════════════════════════════════
+  For each test, answer these questions:
+
+  FORWARD test:
+    [ ] Did motors spin?  YES / NO
+    [ ] Front motors (Ch3 FR, Ch4 FL): air blew _______ (inward/outward)
+    [ ] Rear motors  (Ch1 BR, Ch2 BL): air blew _______ (inward/outward)
+    [ ] If free to move, ROV would go: FORWARD / BACKWARD / UNSURE
+
+  STRAFE RIGHT test:
+    [ ] Did motors spin?  YES / NO
+    [ ] Right motors (Ch1 BR, Ch3 FR): air blew _______ (inward/outward)
+    [ ] Left motors  (Ch2 BL, Ch4 FL): air blew _______ (inward/outward)
+    [ ] If free to move, ROV would go: RIGHT / LEFT / UNSURE
+
+  YAW CW test:
+    [ ] Did motors spin?  YES / NO
+    [ ] ROV body would rotate: CW / CCW / UNSURE
+  ═══════════════════════════════════════════════════════════════════""")
+
+    # ── VERDICT ──
+    if total_spins == 0:
+        print(f"""
+  >>> WARNING: NO MOTORS PHYSICALLY SPUN <<<
+  PWM deviations did not exceed ESC deadband ({PWM_DEADBAND}).
+  Current max deviation: check table above.
+  
+  FIX: Increase THRUST_VALUE in the script.
+  Current value: {THRUST_VALUE} → Try: {min(THRUST_VALUE * 2, 500)}
+  Then re-run this test.""")
+    elif all_match and total_spins == total_expected:
+        print(f"""
+  >>> ALL ELECTRONIC MATCHES + ALL MOTORS SPINNING <<<
+  The mixing matrix is electronically correct AND motors are responding.
+  
+  NOW: Use your physical observations above to determine if
+  the thrust DIRECTION is correct for mesh-inward mounting.
+  
+  Paste this entire summary + observations into your chat.""")
+    elif all_match:
+        print(f"""
+  >>> ELECTRONIC MATCH but only {total_spins}/{total_expected} motor responses <<<
+  Mixing directions are correct but some motors may be in deadband.
+  Physical observations for spinning motors are still valid.
+  
+  Paste this entire summary + observations into your chat.""")
+    else:
+        print(f"""
+  >>> MISMATCHES DETECTED <<<
+  Some channels responded in unexpected directions.
+  Paste this entire summary into your chat for diagnosis.""")
+
+    print("\n" + "=" * 75)
+    print("  END OF DIAGNOSTIC REPORT")
+    print("  Copy from 'MIXING MATRIX DIAGNOSTIC SUMMARY' to here.")
+    print("=" * 75)
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -208,311 +590,142 @@ def monitor_deltas(mav, baseline, duration):
 # ═════════════════════════════════════════════════════════════════════
 
 def main():
-    print("\n" + "=" * 60)
-    print("  POST-REBOOT FRAME VERIFICATION & MOTOR TEST")
-    print("=" * 60)
+    print("\n" + "=" * 65)
+    print("  BLUEROV2 MIXING MATRIX DIAGNOSTIC TEST (v2)")
+    print("=" * 65)
     print(f"""
-  Run this AFTER:
-    1. FRAME_CONFIG has been changed
-    2. LiPo disconnected and reconnected
-    3. Waited 30 seconds for boot
+  This script tests each movement axis one at a time and
+  captures the actual PWM output to each motor channel.
 
-  Port: UDP {MAV_PORT}
-  Props must be REMOVED
+  Tests:  FORWARD, BACKWARD, STRAFE L/R, YAW CW/CCW
+  Thrust: {THRUST_VALUE}/1000 ({THRUST_VALUE/10:.1f}%)
+  Pulse:  {PULSE_DURATION}s per test, {SETTLE_SECS}s settle between
+  Total:  ~{len(TEST_SEQUENCE) * (PULSE_DURATION + SETTLE_SECS):.0f}s of motor activity
+
+  v2 FIX: Thrust increased from 70 to {THRUST_VALUE} to clear ESC deadband.
+  Previous run showed ±14 PWM deviation — not enough to spin.
+  At {THRUST_VALUE}/1000 we expect ~±{THRUST_VALUE * 400 // 1000} PWM deviation.
+
+  Motor layout (verified):
+       FRONT
+    Ch4(FL,CCW)   Ch3(FR,CW)
+          [ROV]
+    Ch2(BL,CW)    Ch1(BR,CCW)
+       BACK
+
+  IMPORTANT: Watch/feel each test carefully!
+  Note which direction air moves for each command.
+  PROPS MUST BE REMOVED FOR BENCH TESTING!
 """)
 
     confirm = input("  Type YES to proceed: ").strip().upper()
     if confirm != "YES":
+        print("  Aborted.")
         sys.exit(0)
 
-    # ── STEP 1: Connect ──
-    mav = connect()
+    mav = None
+    nh = None
 
-    # ── STEP 2: Verify parameters ──
-    print("\n" + "=" * 60)
-    print("  STEP 1 -- PARAMETER VERIFICATION")
-    print("=" * 60)
+    try:
+        # Phase 1: Connect
+        mav = connect()
 
-    frame_names = {
-        0: "BlueROV1 (6-thruster vectored)",
-        1: "SimpleROV-3 (3 thrusters)",
-        2: "SimpleROV-4 (4 thrusters vectored)",
-        3: "SimpleROV-5 (5 thrusters)",
-        4: "BlueROV2 (6-thruster standard)",
-        5: "BlueROV2 Heavy (8-thruster)",
-        6: "Vectored-6DOF (6 thrusters)",
-        7: "Custom (no param matrix)",
-    }
+        # Phase 2: Start neutral hold
+        nh = NeutralHold(mav)
+        nh.start()
+        print("  Neutral hold thread started (10Hz).")
+        time.sleep(1)
 
-    fc = read_param(mav, "FRAME_CONFIG")
-    if fc is not None:
-        fc_int = int(fc)
-        name = frame_names.get(fc_int, f"Unknown({fc_int})")
-        print(f"\n  FRAME_CONFIG = {fc_int}  ({name})")
-    else:
-        print(f"\n  Could not read FRAME_CONFIG!")
-        fc_int = -1
+        # Phase 3: Request servo stream
+        request_servo_stream(mav)
 
-    ac = read_param(mav, "ARMING_CHECK")
-    if ac is not None:
-        print(f"  ARMING_CHECK = {int(ac)}  "
-              f"{'(disabled)' if int(ac) == 0 else 'WARNING: should be 0'}")
+        # Phase 4: Arm
+        print("\n  Arming vehicle...")
+        if not arm_vehicle(mav):
+            print("  FAILED to arm! Exiting.")
+            nh.stop()
+            sys.exit(1)
 
-    print(f"\n  Servo assignments:")
-    func_names = {
-        0: "Disabled", 33: "Motor1", 34: "Motor2",
-        35: "Motor3", 36: "Motor4", 37: "Motor5",
-        38: "Motor6", 39: "Motor7", 40: "Motor8",
-        7: "RCPassThru", 181: "ProGripperOpen"
-    }
-    for i in range(1, 9):
-        val = read_param(mav, f"SERVO{i}_FUNCTION")
-        if val is not None:
-            iv = int(val)
-            fname = func_names.get(iv, f"Function_{iv}")
-            expected = ""
-            if i <= 4:
-                exp = 32 + i
-                expected = " OK" if iv == exp else f" WARNING: expected {exp}"
-            else:
-                expected = " OK" if iv == 0 else " WARNING: should be 0"
-            print(f"    SERVO{i}_FUNCTION = {iv:>3} ({fname}){expected}")
+        time.sleep(2)
+        print("  Armed and ready.\n")
 
-    # ── STEP 3: Check servo baselines BEFORE arming ──
-    print("\n" + "=" * 60)
-    print("  STEP 2 -- SERVO BASELINE CHECK (before arming)")
-    print("=" * 60)
+        # Phase 5: Pre-flight motor check
+        preflight_ok = preflight_motor_check(mav, nh)
 
-    drain_messages(mav)
-    base_pre = read_baseline(mav, 1.5)
-    print(f"\n  Pre-arm servo baselines:")
-    for i in range(1, 9):
-        b = base_pre[i]
-        if b == 0:
-            status = "OFF/uninitialized"
-        elif 1450 <= b <= 1550:
-            status = "neutral (good)"
+        if not preflight_ok:
+            print("\n  Pre-flight check FAILED — motors won't spin at this thrust.")
+            choice = input("  Continue anyway for data? (YES/NO): ").strip().upper()
+            if choice != "YES":
+                print("  Aborting. Disarming...")
+                disarm_vehicle(mav)
+                nh.stop()
+                sys.exit(0)
+            print("  Continuing with data capture only...")
         else:
-            status = f"unexpected"
-        print(f"    Ch{i}: {b:6.0f}us  ({status})")
+            print("\n  Pre-flight PASSED — motors should spin!")
 
-    alive_pre = [i for i in range(1, 5) if 1450 <= base_pre[i] <= 1550]
-    dead_pre = [i for i in range(1, 5) if base_pre[i] == 0]
+        # Phase 6: Safety confirmation
+        print("\n  " + "!" * 52)
+        print("  ! MOTORS WILL SPIN DURING THE NEXT PHASE          !")
+        print("  ! Ensure props are removed and area is clear       !")
+        print("  " + "!" * 52)
+        confirm2 = input("\n  Type GO to begin tests (Ctrl+C to abort): ").strip().upper()
+        if confirm2 != "GO":
+            print("  Aborted. Disarming...")
+            disarm_vehicle(mav)
+            nh.stop()
+            sys.exit(0)
 
-    if dead_pre:
-        print(f"\n  WARNING: Channels {dead_pre} show 0us before arming")
-        print(f"  These channels may not be initialized by this frame type")
+        # Phase 7: Run all tests
+        print(f"\n  Running {len(TEST_SEQUENCE)} tests...\n")
+        results = []
+        for i, (test_name, x, y, z, r) in enumerate(TEST_SEQUENCE, 1):
+            print(f"\n  --- Test {i}/{len(TEST_SEQUENCE)} ---")
+            result = run_single_test(mav, nh, test_name, x, y, z, r)
+            results.append(result)
 
-    # ── STEP 4: Arm ──
-    print("\n" + "=" * 60)
-    print("  STEP 3 -- ARMING")
-    print("=" * 60)
-
-    nh = NeutralHold(mav)
-    nh.start()
-
-    if not arm_vehicle(mav):
-        print("\n  Could not arm the vehicle!")
-        print("  Possible causes:")
-        print("    - ARMING_CHECK may have reset (set to 0 again)")
-        print("    - New frame type may have different arm requirements")
-        print("    - Try power cycling and running again")
-        nh.stop()
-        sys.exit(1)
-
-    time.sleep(2)
-
-    # ── STEP 5: Check servo baselines AFTER arming ──
-    print("\n" + "=" * 60)
-    print("  STEP 4 -- SERVO BASELINE CHECK (after arming)")
-    print("=" * 60)
-
-    drain_messages(mav)
-    base_armed = read_baseline(mav, 1.5)
-    print(f"\n  Armed servo baselines:")
-    for i in range(1, 9):
-        b = base_armed[i]
-        pre = base_pre[i]
-        changed = "CHANGED" if abs(b - pre) > 10 else ""
-        if b == 0:
-            status = "OFF"
-        elif 1450 <= b <= 1550:
-            status = "neutral"
-        else:
-            status = "active"
-        print(f"    Ch{i}: {b:6.0f}us  ({status})  {changed}")
-
-    alive_armed = [i for i in range(1, 5)
-                   if 1450 <= base_armed[i] <= 1550]
-    dead_armed = [i for i in range(1, 5) if base_armed[i] == 0]
-
-    if dead_armed:
-        print(f"\n  WARNING: Channels {dead_armed} still 0us after arming!")
-    if alive_armed:
-        print(f"\n  Active motor channels: {alive_armed}")
-
-    # ── STEP 6: Axis tests ──
-    print("\n" + "=" * 60)
-    print("  STEP 5 -- MANUAL_CONTROL AXIS TESTS")
-    print(f"  Thrust: {THRUST}/1000 ({THRUST/10:.0f}%)")
-    print(f"  Duration: {SPIN_SECS}s per test")
-    print("=" * 60)
-
-    T = THRUST
-    tests = [
-        ("FORWARD      x=+T",    T,   0, 500,   0),
-        ("BACKWARD     x=-T",   -T,   0, 500,   0),
-        ("STRAFE RIGHT y=+T",    0,   T, 500,   0),
-        ("STRAFE LEFT  y=-T",    0,  -T, 500,   0),
-        ("YAW CW      r=+T",    0,   0, 500,   T),
-        ("YAW CCW     r=-T",    0,   0, 500,  -T),
-        ("ASCEND      z=700",    0,   0, 700,   0),
-        ("DESCEND     z=300",    0,   0, 300,   0),
-    ]
-
-    results = {}
-    for label, x, y, z, r in tests:
-        print(f"\n  >> {label}")
-        print(f"     x={x:+4d}  y={y:+4d}  z={z:4d}  r={r:+4d}")
-
-        drain_messages(mav)
-        base = read_baseline(mav, 0.5)
-
-        nh.cmd(x=x, y=y, z=z, r=r)
-        peaks, count = monitor_deltas(mav, base, SPIN_SECS)
+        # Phase 8: Settle and disarm
+        print(f"\n  All tests complete. Settling at neutral...")
         nh.neutral()
+        time.sleep(2)
 
-        moved = []
-        print(f"     Servo messages captured: {count}")
-        for i in range(1, 5):
-            d = peaks[i]
-            bar = "#" * min(int(abs(d) / 3), 30)
-            direction = "UP  " if d > 0 else "DOWN" if d < 0 else "    "
-            tag = " <-- MOVED" if abs(d) > NOISE_FLOOR else ""
-            print(f"     Ch{i}: {d:+7.0f}us  {direction}  {bar}{tag}")
-            if abs(d) > NOISE_FLOOR:
-                moved.append((i, "UP" if d > 0 else "DOWN"))
+        print("  Disarming...")
+        disarm_vehicle(mav)
+        nh.stop()
+        print("  Disarmed.\n")
 
-        # Also check channels 5-8 just in case
-        extra_moved = []
-        for i in range(5, 9):
-            d = peaks[i]
-            if abs(d) > NOISE_FLOOR:
-                extra_moved.append((i, d))
+        # Phase 9: Print summary
+        print_final_summary(results)
 
-        if extra_moved:
-            print(f"     Also moved on Ch5-8: {extra_moved}")
+    except KeyboardInterrupt:
+        print("\n\n  [E-STOP] Ctrl+C detected!")
+        print("  Sending neutral and disarming...")
+        try:
+            if nh:
+                nh.neutral()
+                time.sleep(0.5)
+            if mav:
+                disarm_vehicle(mav)
+            if nh:
+                nh.stop()
+        except Exception:
+            pass
+        print("  Emergency stop complete.")
 
-        if moved:
-            print(f"     RESPONDED: {moved}")
-        else:
-            print(f"     NO RESPONSE")
-
-        results[label] = {
-            "moved": moved,
-            "peaks": {i: peaks[i] for i in range(1, 9)},
-            "x": x, "y": y, "z": z, "r": r
-        }
-
-        time.sleep(SETTLE_SECS)
-
-    # ── SUMMARY ──
-    print("\n" + "=" * 60)
-    print("  COMPLETE TEST SUMMARY")
-    print("=" * 60)
-
-    print(f"\n  FRAME_CONFIG = {fc_int}  "
-          f"({frame_names.get(fc_int, 'Unknown')})")
-    print(f"  Active servo channels at baseline: {alive_armed}")
-    print(f"  Dead servo channels: {dead_armed}")
-
-    print(f"\n  {'Axis Test':<25} {'Channels Moved':<30}")
-    print(f"  {'-'*25} {'-'*30}")
-
-    any_worked = False
-    for label, info in results.items():
-        moved_str = str(info['moved']) if info['moved'] else "NONE"
-        sym = "OK  " if info['moved'] else "FAIL"
-        print(f"  [{sym}] {label:<23} {moved_str}")
-        if info['moved']:
-            any_worked = True
-
-    # ── Analysis ──
-    if any_worked:
-        print(f"""
-  ============================================================
-  MOTORS ARE RESPONDING!
-
-  FRAME_CONFIG = {fc_int} is producing servo output.
-
-  Next steps:
-  1. Look at which channels respond to FORWARD vs YAW etc
-  2. Physically identify each motor position (FR/FL/BR/BL)
-  3. If any direction is backward:
-     - Change MOT_X_DIRECTION from 1 to -1
-     - OR swap two motor phase wires
-  4. Your GUI MANUAL_CONTROL commands will now work!
-  ============================================================
-""")
-
-        # Build motor map from results
-        print("  MOTOR BEHAVIOR MAP:")
-        print("  (Which channels go UP/DOWN for each command)\n")
-
-        for label, info in results.items():
-            if info['moved']:
-                parts = []
-                for ch, direction in info['moved']:
-                    parts.append(f"Ch{ch}={direction}")
-                print(f"    {label:<25} {', '.join(parts)}")
-
-    elif alive_armed and not any_worked:
-        print(f"""
-  ============================================================
-  CHANNELS ARE ALIVE BUT NO AXIS RESPONSE
-
-  Channels {alive_armed} show 1500us (initialized) but
-  MANUAL_CONTROL commands produce zero output.
-
-  This means the mixing matrix for FRAME_CONFIG={fc_int}
-  does not map to your physical motor arrangement.
-
-  Try a different frame:
-    - Re-run frame_fix_and_test.py with a different number
-    - Frame 0 (BlueROV1) has a vectored 6-thruster matrix
-    - Frame 4 (BlueROV2) has a different layout
-  ============================================================
-""")
-
-    elif dead_armed:
-        print(f"""
-  ============================================================
-  SERVO CHANNELS NOT INITIALIZED
-
-  Channels {dead_armed} show 0us even after arming.
-  This frame type may not initialize all 4 motor outputs.
-
-  Possible fixes:
-    1. Try a different FRAME_CONFIG value
-    2. Check SERVO{dead_armed[0]}_FUNCTION is set correctly
-    3. Check physical wiring on Pixhawk MAIN OUT pins
-  ============================================================
-""")
-
-    else:
-        print(f"""
-  ============================================================
-  NO RESPONSE AT ALL
-
-  No servo channels responded to any command.
-  Try a different FRAME_CONFIG value.
-  ============================================================
-""")
-
-    print("\n  Disarming...")
-    disarm_vehicle(mav)
-    nh.stop()
-    print("  Done\n")
+    except Exception as e:
+        print(f"\n  [ERROR] {e}")
+        import traceback
+        traceback.print_exc()
+        try:
+            if nh:
+                nh.neutral()
+                time.sleep(0.5)
+            if mav:
+                disarm_vehicle(mav)
+            if nh:
+                nh.stop()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
