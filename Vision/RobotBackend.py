@@ -13,6 +13,7 @@ from rov_config import (
     FRAME_WIDTH, FRAME_HEIGHT,
     YOLO_MODEL, YOLO_CONFIDENCE, YOLO_ENABLED
 )
+from shared_state import SharedState
 
 RECV_BUF_SIZE = 131072
 FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -20,11 +21,17 @@ DETECTION_COLOR = (0, 200, 255)
 
 
 class RobotLogic:
+    """
+    Video ingestion + AI processing pipeline.
 
-    def __init__(self, log_callback):
-        self._log = log_callback
+    - Runs on a background thread.
+    - Writes frames and status to SharedState (never touches tkinter).
+    - Logs via SharedState.log().
+    """
+
+    def __init__(self, state: SharedState):
+        self._state = state
         self.running = False
-        self.latest_frame = None
         self._thread = None
         self._stop = threading.Event()
         self._frame_count = 0
@@ -35,13 +42,17 @@ class RobotLogic:
         self._yolo_enabled = YOLO_ENABLED
         self._yolo_loaded = False
 
-    # =========================================================================
+    # =====================================================================
     #  START / STOP
-    # =========================================================================
+    # =====================================================================
 
     def start(self):
         self._stop.clear()
         self.running = True
+
+        # Push initial AI status
+        self._state.set_video_ai_status(
+            loaded=False, enabled=self._yolo_enabled)
 
         if self._yolo_enabled:
             threading.Thread(target=self._load_yolo, daemon=True,
@@ -50,44 +61,47 @@ class RobotLogic:
         self._thread = threading.Thread(target=self._video_loop, daemon=True,
                                         name="VideoThread")
         self._thread.start()
-        self._log("Video backend started.")
+        self._state.log("Video backend started.")
 
     def stop(self):
-        self._log("Stopping video backend...")
+        self._state.log("Stopping video backend...")
         self._stop.set()
         self.running = False
         if self._thread:
             self._thread.join(timeout=3)
-        self._log("Video backend stopped.")
+        self._state.log("Video backend stopped.")
 
-    # =========================================================================
+    # =====================================================================
     #  YOLO LOADER
-    # =========================================================================
+    # =====================================================================
 
     def _load_yolo(self):
         try:
-            self._log(f"Loading YOLO model: {YOLO_MODEL}...")
+            self._state.log(f"Loading YOLO model: {YOLO_MODEL}...")
             from ultralytics import YOLO
             self._yolo = YOLO(YOLO_MODEL)
             self._yolo_loaded = True
-            self._log("✅ YOLO model loaded.")
+            self._state.set_video_ai_status(loaded=True, enabled=True)
+            self._state.log("✅ YOLO model loaded.")
         except ImportError:
-            self._log("⚠️  ultralytics not installed — YOLO disabled")
+            self._state.log("⚠️  ultralytics not installed — YOLO disabled")
             self._yolo_enabled = False
+            self._state.set_video_ai_status(loaded=False, enabled=False)
         except Exception as e:
-            self._log(f"⚠️  YOLO load failed: {e}")
+            self._state.log(f"⚠️  YOLO load failed: {e}")
             self._yolo_enabled = False
+            self._state.set_video_ai_status(loaded=False, enabled=False)
 
-    # =========================================================================
+    # =====================================================================
     #  VIDEO RECEIVE LOOP
-    # =========================================================================
+    # =====================================================================
 
     def _video_loop(self):
         sock = self._create_socket()
         if sock is None:
             return
 
-        self._log("Waiting for video stream from Pi...")
+        self._state.log("Waiting for video stream from Pi...")
         stream_started = False
 
         while not self._stop.is_set():
@@ -95,7 +109,8 @@ class RobotLogic:
                 data, addr = sock.recvfrom(RECV_BUF_SIZE)
 
                 if not stream_started:
-                    self._log(f"✅ Video stream received from {addr[0]}")
+                    self._state.log(
+                        f"✅ Video stream received from {addr[0]}")
                     stream_started = True
 
                 frame = cv2.imdecode(
@@ -108,19 +123,20 @@ class RobotLogic:
                 frame = self._process_ai(frame)
                 frame = self._draw_hud(frame)
 
-                self.latest_frame = frame
+                # ── Thread-safe frame handoff ────────────────────────────
                 self._update_fps()
+                self._state.set_video_frame(frame, self._fps)
 
             except socket.timeout:
                 if stream_started:
-                    self._log("⚠️  Video stream timeout — waiting...")
+                    self._state.log("⚠️  Video stream timeout — waiting...")
                     stream_started = False
             except Exception as e:
                 if not self._stop.is_set():
-                    self._log(f"Video error: {e}")
+                    self._state.log(f"Video error: {e}")
 
         sock.close()
-        self._log("Video socket closed.")
+        self._state.log("Video socket closed.")
 
     def _create_socket(self):
         """Create and bind the UDP receive socket."""
@@ -128,10 +144,11 @@ class RobotLogic:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, RECV_BUF_SIZE)
         try:
             sock.bind(('0.0.0.0', VIDEO_PORT))
-            self._log(f"Video socket bound on port {VIDEO_PORT}")
+            self._state.log(f"Video socket bound on port {VIDEO_PORT}")
         except OSError as e:
-            self._log(f"❌ Cannot bind video port {VIDEO_PORT}: {e}")
-            self._log("    Is another app using this port?")
+            self._state.log(
+                f"❌ Cannot bind video port {VIDEO_PORT}: {e}")
+            self._state.log("    Is another app using this port?")
             self.running = False
             return None
         sock.settimeout(2.0)
@@ -147,9 +164,9 @@ class RobotLogic:
             self._frame_count = 0
             self._last_fps_t = now
 
-    # =========================================================================
+    # =====================================================================
     #  AI PROCESSING
-    # =========================================================================
+    # =====================================================================
 
     def _process_ai(self, frame):
         """Run YOLO or show loading overlay if still initializing."""
@@ -190,9 +207,9 @@ class RobotLogic:
         cv2.putText(frame, label_txt, (x1 + 2, y1 - 4),
                     FONT, 0.5, (0, 0, 0), 1)
 
-    # =========================================================================
+    # =====================================================================
     #  HUD OVERLAY
-    # =========================================================================
+    # =====================================================================
 
     def _draw_hud(self, frame):
         """Draw minimal HUD info on the video frame."""

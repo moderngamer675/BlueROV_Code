@@ -27,7 +27,17 @@ MAX_SPEED_SURFACE    = 700   # 70% for surface ops
 MAX_SPEED_UNDERWATER = 500   # 50% for underwater ops
 MAX_SPEED_BENCH      = 100   # 10% for bench testing
 
+# ── Thruster Configuration ────────────────────────────────
+# 4-thruster vectored layout
+THRUSTER_COUNT  = 4
+THRUSTER_LABELS = ["T1", "T2", "T3", "T4"]
+THRUSTER_ROLES  = ["FWD-L", "FWD-R", "VRT-L", "VRT-R"]
+
 # ── YOLO ──────────────────────────────────────────────────
 YOLO_MODEL       = "yolov8n.pt"   # Nano = fastest
 YOLO_CONFIDENCE  = 0.45
 YOLO_ENABLED     = True
+
+# ── GUI Thread Bridge ────────────────────────────────────
+GUI_POLL_MS       = 16    # ~60fps GUI refresh
+LOG_QUEUE_MAXLEN  = 500   # Max buffered log lines in deque

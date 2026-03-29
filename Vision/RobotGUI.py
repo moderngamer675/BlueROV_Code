@@ -1,6 +1,11 @@
 # RobotApp.py
 # BlueROV2 Mission Control GUI — Modular Refactor
 # Fixed 720x480 camera view
+#
+# THREAD SAFETY:
+#   This file runs ENTIRELY on the tkinter main thread.
+#   All data from background threads is read via SharedState snapshots
+#   in .after() poll loops.  No background thread ever touches a widget.
 
 import tkinter as tk
 from tkinter import scrolledtext, font
@@ -8,6 +13,10 @@ from PIL import Image, ImageTk
 import cv2
 from datetime import datetime
 
+from rov_config import (
+    GUI_POLL_MS, THRUSTER_COUNT, THRUSTER_LABELS, THRUSTER_ROLES
+)
+from shared_state import SharedState, Command
 from RobotBackend import RobotLogic
 from RobotTelemetry import TelemetryHandler
 
@@ -36,9 +45,6 @@ THRUSTER_REFRESH_MS = 50
 TELEMETRY_POLL_MS = 200
 CONTROL_SPEED = 0.30
 
-THRUSTER_LABELS = ["T1", "T2", "T3", "T4", "T5", "T6"]
-THRUSTER_ROLES = ["FWD-L", "FWD-R", "LAT-F", "LAT-A", "VRT-FL", "VRT-FR"]
-
 HUD_MAP = {
     "DEPTH": "HUD_DEPTH", "HEADING": "HUD_HDG", "ROLL": "HUD_ROLL",
     "PITCH": "HUD_PCH", "BATTERY": "HUD_BAT", "CURRENT": "HUD_CUR",
@@ -52,14 +58,12 @@ MOVEMENT_KEYS = ('w', 's', 'a', 'd', 'q', 'e', 'r', 'f')
 # =============================================================================
 
 def make_label(parent, text, size=7, bold=True, color=None, **kw):
-    """Shorthand for themed Courier New labels."""
     weight = "bold" if bold else "normal"
     return tk.Label(parent, text=text, font=("Courier New", size, weight),
                     bg=parent["bg"], fg=color or THEME["text_dim"], **kw)
 
 
 def make_bar(parent, color, side=tk.LEFT, width=3):
-    """Thin colored accent bar."""
     bar = tk.Frame(parent, bg=color, width=width)
     bar.pack(side=side, fill=tk.Y)
     return bar
@@ -72,10 +76,11 @@ def make_separator(parent, color=None, width=1, **pack_kw):
 
 
 def lerp_hex(c1, c2, t):
-    """Linear interpolate between two hex colors."""
     r1, g1, b1 = (int(c1[i:i+2], 16) for i in (1, 3, 5))
     r2, g2, b2 = (int(c2[i:i+2], 16) for i in (1, 3, 5))
-    return f"#{int(r1+(r2-r1)*t):02x}{int(g1+(g2-g1)*t):02x}{int(b1+(b2-b1)*t):02x}"
+    return (f"#{int(r1+(r2-r1)*t):02x}"
+            f"{int(g1+(g2-g1)*t):02x}"
+            f"{int(b1+(b2-b1)*t):02x}")
 
 
 def gradient_color(v, stops):
@@ -134,13 +139,16 @@ class GlowButton(tk.Frame):
 
         if icon:
             tk.Label(row, text=icon, font=("Courier New", 10),
-                     bg=THEME["card"], fg=self._active_color).pack(side=tk.LEFT)
+                     bg=THEME["card"], fg=self._active_color).pack(
+                         side=tk.LEFT)
 
-        self._lbl = tk.Label(row, text=text, font=("Courier New", 9, "bold"),
+        self._lbl = tk.Label(row, text=text,
+                             font=("Courier New", 9, "bold"),
                              bg=THEME["card"], fg=self._active_color, padx=4)
         self._lbl.pack(side=tk.LEFT)
 
-        self._chev = tk.Label(row, text="›", font=("Courier New", 12, "bold"),
+        self._chev = tk.Label(row, text="›",
+                              font=("Courier New", 12, "bold"),
                               bg=THEME["card"], fg=THEME["text_dim"])
         self._chev.pack(side=tk.RIGHT)
 
@@ -192,7 +200,8 @@ class TelemetryCard(tk.Frame):
         color = color or THEME["accent"]
         super().__init__(parent, bg=THEME["card"], relief=tk.FLAT, **kw)
 
-        make_label(self, label, anchor="w").pack(fill=tk.X, padx=8, pady=(6, 0))
+        make_label(self, label, anchor="w").pack(
+            fill=tk.X, padx=8, pady=(6, 0))
 
         self._val_lbl = tk.Label(self, text=value,
                                  font=("Courier New", 13, "bold"),
@@ -226,11 +235,12 @@ class ThrusterBar(tk.Frame):
         badge = tk.Frame(self, bg=THEME["card"])
         badge.pack(fill=tk.X, padx=4, pady=(4, 1))
         make_label(badge, f"#{index+1}").pack(side=tk.LEFT)
-        make_label(badge, label, size=8, color=THEME["accent"]).pack(side=tk.RIGHT)
+        make_label(badge, label, size=8,
+                   color=THEME["accent"]).pack(side=tk.RIGHT)
 
-        self._canvas = tk.Canvas(self, bg=THEME["log_bg"], highlightthickness=1,
-                                 highlightbackground=THEME["border"],
-                                 width=44, height=140)
+        self._canvas = tk.Canvas(
+            self, bg=THEME["log_bg"], highlightthickness=1,
+            highlightbackground=THEME["border"], width=44, height=140)
         self._canvas.pack(padx=4, pady=2)
 
         make_label(self, role, size=6).pack(pady=(0, 1))
@@ -262,12 +272,10 @@ class ThrusterBar(tk.Frame):
         pct = int(abs(v) * 100)
         bar_h = int(abs(v) * (mid - 4))
 
-        # Grid lines
         for frac in (0.25, 0.5, 0.75):
             for y in (int(mid * frac), H - int(mid * frac)):
                 c.create_line(0, y, W, y, fill=THEME["border"], dash=(2, 4))
 
-        # Bar
         if bar_h > 0:
             colors = self._POS if v >= 0 else self._NEG
             fc = gradient_color(abs(v), colors)
@@ -281,16 +289,13 @@ class ThrusterBar(tk.Frame):
             c.create_rectangle(2, y0, W-2, y1, fill=fc, outline="")
             c.create_rectangle(2, gy0, W-2, gy1, fill=gc, outline="")
 
-        # Center line
         zc = THEME["accent"] if v == 0.0 else THEME["border_bright"]
         c.create_line(0, mid, W, mid, fill=zc, width=1)
 
-        # Tick marks
         for y_off in (0, mid // 2, mid):
             for y in (y_off + 2, H - y_off - 2):
                 c.create_line(W-6, y, W, y, fill=THEME["text_dim"], width=1)
 
-        # Label update
         if v > 0.01:
             self._pct_lbl.config(text=f"+{pct}%", fg=THEME["success"])
             self._accent.config(bg=THEME["success"])
@@ -303,15 +308,15 @@ class ThrusterBar(tk.Frame):
 
 
 # =============================================================================
-#  THRUSTER PANEL
+#  THRUSTER PANEL  (now driven by THRUSTER_COUNT from config)
 # =============================================================================
 
 class ThrusterPanel(tk.Frame):
     def __init__(self, parent, labels, roles, **kw):
         super().__init__(parent, bg=THEME["panel"], **kw)
         self._bars: list[ThrusterBar] = []
+        self._count = len(labels)
 
-        # Title bar
         tb = tk.Frame(self, bg=THEME["panel"], height=24)
         tb.pack(fill=tk.X)
         tb.pack_propagate(False)
@@ -326,10 +331,11 @@ class ThrusterPanel(tk.Frame):
         self._peak_lbl = make_label(tb, "PEAK: —%")
         self._peak_lbl.pack(side=tk.RIGHT, padx=12)
 
-        make_label(tb, "W/S=Fwd  A/D=Strafe  Q/E=Yaw  R/F=Depth  SPACE=Stop",
-                   bold=False).pack(side=tk.LEFT, padx=16)
+        make_label(
+            tb,
+            "W/S=Fwd  A/D=Strafe  Q/E=Yaw  R/F=Depth  SPACE=Stop",
+            bold=False).pack(side=tk.LEFT, padx=16)
 
-        # Bars
         bar_row = tk.Frame(self, bg=THEME["panel"])
         bar_row.pack(fill=tk.X, padx=4, pady=(2, 4))
 
@@ -341,7 +347,8 @@ class ThrusterPanel(tk.Frame):
             self._bars.append(bar)
 
     def update_values(self, values):
-        data = ([values.get(THRUSTER_LABELS[i], 0) for i in range(6)]
+        data = ([values.get(THRUSTER_LABELS[i], 0)
+                 for i in range(self._count)]
                 if isinstance(values, dict) else list(values))
         for i, v in enumerate(data):
             if i < len(self._bars):
@@ -359,9 +366,11 @@ class ThrusterPanel(tk.Frame):
 
     def set_armed(self, armed: bool):
         if armed:
-            self._armed_badge.config(text="  ▲ ARMED  ", fg=THEME["danger"])
+            self._armed_badge.config(
+                text="  ▲ ARMED  ", fg=THEME["danger"])
         else:
-            self._armed_badge.config(text="  ◼ DISARMED  ", fg=THEME["text_dim"])
+            self._armed_badge.config(
+                text="  ◼ DISARMED  ", fg=THEME["text_dim"])
             for b in self._bars:
                 b.set_value(0.0)
 
@@ -371,6 +380,15 @@ class ThrusterPanel(tk.Frame):
 # =============================================================================
 
 class RobotApp:
+    """
+    GUI controller — runs entirely on the tkinter main thread.
+
+    Communication with background threads:
+        READ:   self._state.drain_telemetry_updates()
+                self._state.get_video_frame()
+                self._state.drain_logs()
+        WRITE:  self._state.send_command(Command(...))
+    """
 
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -384,23 +402,30 @@ class RobotApp:
 
         self._keys = {k: False for k in MOVEMENT_KEYS}
 
-        self.video_backend = RobotLogic(self.log)
-        self.telemetry_backend = TelemetryHandler(
-            self.update_telemetry_display, self.log)
+        # ── Shared state bridge ──────────────────────────────────────────
+        self._state = SharedState()
+
+        # ── Backend instances ────────────────────────────────────────────
+        self.video_backend = RobotLogic(self._state)
+        self.telemetry_backend = TelemetryHandler(self._state)
 
         self._configure_window()
         self._build_ui()
         self._bind_keys()
         self.root.protocol("WM_DELETE_WINDOW", self.close_app)
 
-        self.log("Mission Control initialised. Awaiting connection.")
-        self.log("Keys: W/S A/D Q/E R/F  |  SPACE = Emergency Stop")
+        self._log_to_widget(
+            "Mission Control initialised. Awaiting connection.")
+        self._log_to_widget(
+            "Keys: W/S A/D Q/E R/F  |  SPACE = Emergency Stop")
 
+        # ── Start periodic GUI poll loops ────────────────────────────────
         self._start_periodic(self._blink_tick, BLINK_INTERVAL_MS)
         self._start_periodic(self._thruster_tick, THRUSTER_REFRESH_MS)
         self._start_periodic(self._poll_telemetry, TELEMETRY_POLL_MS)
+        self._start_periodic(self._poll_shared_state, GUI_POLL_MS)
 
-    # ── Periodic timer helper ────────────────────────────────────────────────
+    # ── Periodic timer helper ────────────────────────────────────────────
 
     def _start_periodic(self, func, interval_ms):
         def _loop():
@@ -408,9 +433,9 @@ class RobotApp:
             self.root.after(interval_ms, _loop)
         _loop()
 
-    # =========================================================================
+    # =====================================================================
     #  WINDOW CONFIG
-    # =========================================================================
+    # =====================================================================
 
     def _configure_window(self):
         self.root.title("BlueROV2 — Mission Control")
@@ -418,15 +443,18 @@ class RobotApp:
         self.root.resizable(False, False)
         self.root.configure(bg=THEME["bg"])
 
-        self.fnt_header = font.Font(family="Courier New", size=14, weight="bold")
-        self.fnt_sub = font.Font(family="Courier New", size=9, weight="bold")
-        self.fnt_lbl = font.Font(family="Courier New", size=7, weight="bold")
+        self.fnt_header = font.Font(
+            family="Courier New", size=14, weight="bold")
+        self.fnt_sub = font.Font(
+            family="Courier New", size=9, weight="bold")
+        self.fnt_lbl = font.Font(
+            family="Courier New", size=7, weight="bold")
         self.fnt_log = font.Font(family="Courier New", size=8)
         self.fnt_mono_sm = font.Font(family="Courier New", size=8)
 
-    # =========================================================================
+    # =====================================================================
     #  UI ASSEMBLY
-    # =========================================================================
+    # =====================================================================
 
     def _build_ui(self):
         outer = tk.Frame(self.root, bg=THEME["bg"])
@@ -440,20 +468,22 @@ class RobotApp:
         self._build_left_column(body)
         self._build_right_panel(body)
 
+        # Thruster panel uses config-driven labels and roles
         self.thruster_panel = ThrusterPanel(
             outer, labels=THRUSTER_LABELS, roles=THRUSTER_ROLES)
         self.thruster_panel.pack(fill=tk.X, pady=(8, 0))
 
         self._build_log_panel(outer)
 
-    # ── Header ────────────────────────────────────────────────────────────────
+    # ── Header ────────────────────────────────────────────────────────────
 
     def _build_header(self, parent):
         hdr = tk.Frame(parent, bg=THEME["panel"], height=56)
         hdr.pack(fill=tk.X)
         hdr.pack_propagate(False)
 
-        tk.Frame(hdr, bg=THEME["accent"], width=4).pack(side=tk.LEFT, fill=tk.Y)
+        tk.Frame(hdr, bg=THEME["accent"], width=4).pack(
+            side=tk.LEFT, fill=tk.Y)
 
         title_blk = tk.Frame(hdr, bg=THEME["panel"])
         title_blk.pack(side=tk.LEFT, fill=tk.Y, padx=(14, 0))
@@ -461,7 +491,8 @@ class RobotApp:
         tk.Label(title_blk, text="BLUEROV2  MISSION CONTROL",
                  font=self.fnt_header, bg=THEME["panel"],
                  fg=THEME["accent"]).pack(anchor="w", pady=(8, 0))
-        tk.Label(title_blk, text="Underwater Vehicle Operations  //  v2.4.1",
+        tk.Label(title_blk,
+                 text="Underwater Vehicle Operations  //  v2.4.1",
                  font=self.fnt_lbl, bg=THEME["panel"],
                  fg=THEME["text_dim"]).pack(anchor="w")
 
@@ -489,45 +520,45 @@ class RobotApp:
 
         self._tick_clock()
 
-        self.status_dot = tk.Label(parent, text="●",
-                                   font=("Courier New", 16, "bold"),
-                                   bg=THEME["panel"], fg=THEME["danger"])
+        self.status_dot = tk.Label(
+            parent, text="●", font=("Courier New", 16, "bold"),
+            bg=THEME["panel"], fg=THEME["danger"])
         self.status_dot.pack(side=tk.LEFT, padx=(4, 0), pady=8)
 
-    # =========================================================================
+    # =====================================================================
     #  LEFT COLUMN
-    # =========================================================================
+    # =====================================================================
 
     def _build_left_column(self, parent):
         left = tk.Frame(parent, bg=THEME["bg"], width=CAM_W + 4)
         left.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 8))
         left.pack_propagate(False)
 
-        # Title bar
         tb = tk.Frame(left, bg=THEME["panel"], height=26)
         tb.pack(fill=tk.X)
         tb.pack_propagate(False)
 
-        tk.Frame(tb, bg=THEME["accent"], width=3).pack(side=tk.LEFT, fill=tk.Y)
+        tk.Frame(tb, bg=THEME["accent"], width=3).pack(
+            side=tk.LEFT, fill=tk.Y)
         tk.Label(tb, text=f"  PRIMARY CAMERA FEED  [{CAM_W}×{CAM_H}]",
                  font=self.fnt_sub, bg=THEME["panel"],
                  fg=THEME["accent"]).pack(side=tk.LEFT, pady=3)
 
-        self.ai_status_lbl = tk.Label(tb, text="AI: LOADING",
-                                      font=self.fnt_lbl, bg=THEME["panel"],
-                                      fg=THEME["warning"])
+        self.ai_status_lbl = tk.Label(
+            tb, text="AI: LOADING", font=self.fnt_lbl,
+            bg=THEME["panel"], fg=THEME["warning"])
         self.ai_status_lbl.pack(side=tk.RIGHT, padx=8)
 
-        self.cam_status_lbl = tk.Label(tb, text="● NO SIGNAL",
-                                       font=self.fnt_lbl, bg=THEME["panel"],
-                                       fg=THEME["danger"])
+        self.cam_status_lbl = tk.Label(
+            tb, text="● NO SIGNAL", font=self.fnt_lbl,
+            bg=THEME["panel"], fg=THEME["danger"])
         self.cam_status_lbl.pack(side=tk.RIGHT, padx=8)
 
-        # Camera canvas
         cam_border = tk.Frame(left, bg=THEME["border"])
         cam_border.pack()
 
-        cam_inner = tk.Frame(cam_border, bg="black", width=CAM_W, height=CAM_H)
+        cam_inner = tk.Frame(
+            cam_border, bg="black", width=CAM_W, height=CAM_H)
         cam_inner.pack(padx=1, pady=1)
         cam_inner.pack_propagate(False)
 
@@ -542,7 +573,8 @@ class RobotApp:
         self._build_hud_strip(left)
 
     def _build_hud_strip(self, parent):
-        hud = tk.Frame(parent, bg=THEME["panel"], height=34, width=CAM_W + 4)
+        hud = tk.Frame(parent, bg=THEME["panel"], height=34,
+                       width=CAM_W + 4)
         hud.pack(fill=tk.X, pady=(3, 0))
         hud.pack_propagate(False)
 
@@ -556,7 +588,8 @@ class RobotApp:
             cell.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
             tk.Label(cell, text=lbl_txt, font=self.fnt_lbl,
-                     bg=THEME["panel"], fg=THEME["text_dim"]).pack(pady=(3, 0))
+                     bg=THEME["panel"], fg=THEME["text_dim"]).pack(
+                         pady=(3, 0))
 
             v = tk.Label(cell, text="—", font=self.fnt_mono_sm,
                          bg=THEME["panel"], fg=THEME["cyan"])
@@ -564,24 +597,27 @@ class RobotApp:
             self.telemetry_labels[key] = v
 
             if i < len(items) - 1:
-                tk.Frame(hud, bg=THEME["border"],
-                         width=1).pack(side=tk.LEFT, fill=tk.Y, pady=4)
+                tk.Frame(hud, bg=THEME["border"], width=1).pack(
+                    side=tk.LEFT, fill=tk.Y, pady=4)
 
-    # =========================================================================
+    # =====================================================================
     #  RIGHT PANEL
-    # =========================================================================
+    # =====================================================================
 
     def _build_right_panel(self, parent):
         right = tk.Frame(parent, bg=THEME["panel"], width=360)
         right.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         right.pack_propagate(False)
 
-        canvas = tk.Canvas(right, bg=THEME["panel"], highlightthickness=0, bd=0)
-        scrollbar = tk.Scrollbar(right, orient=tk.VERTICAL, command=canvas.yview)
+        canvas = tk.Canvas(right, bg=THEME["panel"],
+                           highlightthickness=0, bd=0)
+        scrollbar = tk.Scrollbar(
+            right, orient=tk.VERTICAL, command=canvas.yview)
 
         sf = tk.Frame(canvas, bg=THEME["panel"])
         sf.bind("<Configure>",
-                lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+                lambda e: canvas.configure(
+                    scrollregion=canvas.bbox("all")))
 
         win_id = canvas.create_window((0, 0), window=sf, anchor="nw")
         canvas.bind("<Configure>",
@@ -663,34 +699,42 @@ class RobotApp:
         frame = tk.Frame(parent, bg=THEME["panel"])
         frame.pack(fill=tk.X, padx=8, pady=(0, 8))
 
-        self.btn_connect = GlowButton(frame, "CONNECT & INITIALISE",
-                                      THEME["success"], self.start_system, icon="▶")
+        self.btn_connect = GlowButton(
+            frame, "CONNECT & INITIALISE",
+            THEME["success"], self.start_system, icon="▶")
         self.btn_connect.pack(fill=tk.X, pady=2)
 
-        self.btn_arm = GlowButton(frame, "ARM VEHICLE", THEME["text_dim"],
-                                  self.toggle_arm, icon="▲", disabled=True)
+        self.btn_arm = GlowButton(
+            frame, "ARM VEHICLE", THEME["text_dim"],
+            self.toggle_arm, icon="▲", disabled=True)
         self.btn_arm.pack(fill=tk.X, pady=2)
 
-        SeparatorLine(frame, label=" OPERATIONS").pack(fill=tk.X, pady=(4, 1))
+        SeparatorLine(frame, label=" OPERATIONS").pack(
+            fill=tk.X, pady=(4, 1))
 
-        self.btn_deploy = GlowButton(frame, "DEPLOY", THEME["text_dim"],
-                                     self.deploy_mission, icon="⬇", disabled=True)
+        self.btn_deploy = GlowButton(
+            frame, "DEPLOY", THEME["text_dim"],
+            self.deploy_mission, icon="⬇", disabled=True)
         self.btn_deploy.pack(fill=tk.X, pady=2)
 
-        self.btn_retrieve = GlowButton(frame, "RETRIEVE", THEME["text_dim"],
-                                       self.retrieve_mission, icon="⬆", disabled=True)
+        self.btn_retrieve = GlowButton(
+            frame, "RETRIEVE", THEME["text_dim"],
+            self.retrieve_mission, icon="⬆", disabled=True)
         self.btn_retrieve.pack(fill=tk.X, pady=2)
 
-        SeparatorLine(frame, label=" SAFETY").pack(fill=tk.X, pady=(4, 1))
+        SeparatorLine(frame, label=" SAFETY").pack(
+            fill=tk.X, pady=(4, 1))
 
         GlowButton(frame, "EMERGENCY STOP", THEME["danger"],
-                   self.emergency_stop, icon="◼").pack(fill=tk.X, pady=2)
+                   self.emergency_stop, icon="◼").pack(
+                       fill=tk.X, pady=2)
         GlowButton(frame, "QUIT", THEME["text_dim"],
-                   self.close_app, icon="✕").pack(fill=tk.X, pady=2)
+                   self.close_app, icon="✕").pack(
+                       fill=tk.X, pady=2)
 
-    # =========================================================================
+    # =====================================================================
     #  LOG PANEL
-    # =========================================================================
+    # =====================================================================
 
     def _build_log_panel(self, parent):
         wrapper = tk.Frame(parent, bg=THEME["panel"])
@@ -702,10 +746,12 @@ class RobotApp:
 
         make_bar(tb, THEME["success"])
         tk.Label(tb, text="  MISSION LOG", font=self.fnt_sub,
-                 bg=THEME["panel"], fg=THEME["success"]).pack(side=tk.LEFT, pady=1)
-        tk.Button(tb, text="CLEAR", font=self.fnt_lbl, bg=THEME["panel"],
-                  fg=THEME["text_dim"], bd=0, cursor="hand2",
-                  command=self._clear_log).pack(side=tk.RIGHT, padx=8)
+                 bg=THEME["panel"], fg=THEME["success"]).pack(
+                     side=tk.LEFT, pady=1)
+        tk.Button(tb, text="CLEAR", font=self.fnt_lbl,
+                  bg=THEME["panel"], fg=THEME["text_dim"], bd=0,
+                  cursor="hand2", command=self._clear_log).pack(
+                      side=tk.RIGHT, padx=8)
 
         self.log_box = scrolledtext.ScrolledText(
             wrapper, font=self.fnt_log, bg=THEME["log_bg"],
@@ -715,17 +761,19 @@ class RobotApp:
         self.log_box.pack(fill=tk.X, padx=1, pady=(1, 0))
         self.log_box.config(state=tk.DISABLED)
 
-    # =========================================================================
+    # =====================================================================
     #  KEYBOARD
-    # =========================================================================
+    # =====================================================================
 
     def _bind_keys(self):
         for key in MOVEMENT_KEYS:
             for case in (key, key.upper()):
-                self.root.bind(f'<KeyPress-{case}>',
-                               lambda e, k=key: self._set_key(k, True))
-                self.root.bind(f'<KeyRelease-{case}>',
-                               lambda e, k=key: self._set_key(k, False))
+                self.root.bind(
+                    f'<KeyPress-{case}>',
+                    lambda e, k=key: self._set_key(k, True))
+                self.root.bind(
+                    f'<KeyRelease-{case}>',
+                    lambda e, k=key: self._set_key(k, False))
         self.root.bind('<space>', lambda e: self.emergency_stop())
         self._process_keys()
 
@@ -740,56 +788,84 @@ class RobotApp:
                     for p, n in pairs]
 
             if any(self._keys.values()):
-                self.telemetry_backend.set_motion(
-                    forward=vals[0], lateral=vals[1],
-                    throttle=vals[3], yaw=vals[2])
+                self._state.send_command(Command(
+                    name="set_motion",
+                    kwargs=dict(forward=vals[0], lateral=vals[1],
+                                throttle=vals[3], yaw=vals[2])))
 
         self.root.after(100, self._process_keys)
 
-    # =========================================================================
-    #  TELEMETRY CALLBACK
-    # =========================================================================
+    # =====================================================================
+    #  SHARED STATE POLLING
+    # =====================================================================
 
-    def update_telemetry_display(self, key, value, color_hex=None):
-        def _apply():
-            # Cards
-            if key in self.telemetry_cards:
-                self.telemetry_cards[key].update(value, color_hex)
+    def _poll_shared_state(self):
+        # 1. Drain telemetry display updates
+        for update in self._state.drain_telemetry_updates():
+            self._apply_telemetry_update(
+                update.key, update.value, update.color)
 
-            # HUD mirror
-            if key in HUD_MAP and HUD_MAP[key] in self.telemetry_labels:
-                self.telemetry_labels[HUD_MAP[key]].config(text=str(value))
+        # 2. Drain log messages
+        logs = self._state.drain_logs()
+        if logs:
+            self.log_box.config(state=tk.NORMAL)
+            for msg in logs:
+                ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
+                self.log_box.insert(tk.END, f"[{ts}]  {msg}\n")
+            self.log_box.see(tk.END)
+            self.log_box.config(state=tk.DISABLED)
 
-            # Header labels
-            if key in self.telemetry_labels:
-                kw = {"text": str(value)}
-                if color_hex:
-                    kw["fg"] = color_hex
-                self.telemetry_labels[key].config(**kw)
+        # 3. Update video frame
+        self._poll_video_frame()
 
-            # Mode
-            if key == "STATUS" and "MODE" in self.telemetry_labels:
-                self.telemetry_labels["MODE"].config(
-                    text=str(value), fg=THEME["accent"])
+    def _poll_video_frame(self):
+        if not self.video_backend.running:
+            return
 
-            # Armed state sync
-            if key == "ARMED_STATE":
-                self._sync_armed_state(str(value) == "⚠ ARMED")
+        frame, fps = self._state.get_video_frame()
+        if frame is not None:
+            frame = cv2.resize(frame, (CAM_W, CAM_H),
+                               interpolation=cv2.INTER_LINEAR)
+            img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            img_tk = ImageTk.PhotoImage(image=img)
+            self.video_label.configure(image=img_tk, text="")
+            self._current_frame = img_tk
 
-            # Thrusters
-            if key == "THRUSTERS" and isinstance(value, list):
-                self.thruster_panel.update_values(value)
+    # =====================================================================
+    #  TELEMETRY UPDATE DISPATCH
+    # =====================================================================
 
-            # Battery health
-            if key == "BATTERY":
-                self._update_battery_health(value)
+    def _apply_telemetry_update(self, key, value, color_hex=None):
+        if key in self.telemetry_cards:
+            self.telemetry_cards[key].update(value, color_hex)
 
-        self.root.after(0, _apply)
+        if key in HUD_MAP and HUD_MAP[key] in self.telemetry_labels:
+            self.telemetry_labels[HUD_MAP[key]].config(text=str(value))
+
+        if key in self.telemetry_labels:
+            kw = {"text": str(value)}
+            if color_hex:
+                kw["fg"] = color_hex
+            self.telemetry_labels[key].config(**kw)
+
+        if key == "STATUS" and "MODE" in self.telemetry_labels:
+            self.telemetry_labels["MODE"].config(
+                text=str(value), fg=THEME["accent"])
+
+        if key == "ARMED_STATE":
+            self._sync_armed_state(str(value) == "⚠ ARMED")
+
+        if key == "THRUSTERS" and isinstance(value, list):
+            self.thruster_panel.update_values(value)
+
+        if key == "BATTERY":
+            self._update_battery_health(value)
 
     def _update_battery_health(self, value):
         try:
             v = float(str(value))
-            if v <= 0: return
+            if v <= 0:
+                return
             status, color = (
                 (f"{v:.1f}V GOOD", THEME["success"]) if v > 15.5 else
                 (f"{v:.1f}V OK",   THEME["warning"]) if v > 14.5 else
@@ -814,24 +890,25 @@ class RobotApp:
         else:
             self.btn_arm.update_label("ARM VEHICLE", THEME["warning"])
             self._set_ops_buttons(False)
-            self._set_system("Motor Control", "DISARMED", THEME["warning"])
+            self._set_system("Motor Control", "DISARMED",
+                             THEME["warning"])
 
     def _set_ops_buttons(self, enabled: bool):
-        """Enable/disable deploy and retrieve buttons together."""
         color = THEME["cyan"] if enabled else THEME["text_dim"]
         for btn, label in [(self.btn_deploy, "DEPLOY"),
                            (self.btn_retrieve, "RETRIEVE")]:
             btn.set_disabled(not enabled)
             btn.update_label(label, color)
 
-    # =========================================================================
+    # =====================================================================
     #  PERIODIC TICKS
-    # =========================================================================
+    # =====================================================================
 
     def _blink_tick(self):
         self._blink_state = not self._blink_state
         if not self.telemetry_backend.running:
-            col = THEME["danger"] if self._blink_state else THEME["danger_dim"]
+            col = (THEME["danger"] if self._blink_state
+                   else THEME["danger_dim"])
             self.status_dot.config(fg=col)
         else:
             self.status_dot.config(fg=THEME["success"])
@@ -843,8 +920,8 @@ class RobotApp:
         if not self.video_backend.running:
             return
 
-        has_frame = self.video_backend.latest_frame is not None
-        fps = self.video_backend._fps
+        frame, fps = self._state.get_video_frame()
+        has_frame = frame is not None
 
         if has_frame:
             self.cam_status_lbl.config(
@@ -852,52 +929,41 @@ class RobotApp:
             self._set_system("Video Feed", f"LIVE {fps:.0f}fps",
                              THEME["success"])
         else:
-            self.cam_status_lbl.config(text="● WAITING…", fg=THEME["warning"])
+            self.cam_status_lbl.config(
+                text="● WAITING…", fg=THEME["warning"])
 
-        if self.video_backend._yolo_loaded:
-            self.ai_status_lbl.config(text="AI: ACTIVE", fg=THEME["success"])
-            self._set_system("AI Detection", "ACTIVE", THEME["success"])
-        elif not self.video_backend._yolo_enabled:
-            self.ai_status_lbl.config(text="AI: OFF", fg=THEME["text_dim"])
-            self._set_system("AI Detection", "DISABLED", THEME["text_dim"])
+        yolo_loaded, yolo_enabled = self._state.get_video_ai_status()
+        if yolo_enabled and yolo_loaded:
+            self.ai_status_lbl.config(
+                text="AI: ACTIVE", fg=THEME["success"])
+            self._set_system("AI Detection", "ACTIVE",
+                             THEME["success"])
+        elif not yolo_enabled:
+            self.ai_status_lbl.config(
+                text="AI: OFF", fg=THEME["text_dim"])
+            self._set_system("AI Detection", "DISABLED",
+                             THEME["text_dim"])
 
-    # =========================================================================
-    #  VIDEO LOOP
-    # =========================================================================
-
-    def _update_video_loop(self):
-        if not self.video_backend.running:
-            return
-
-        frame = self.video_backend.latest_frame
-        if frame is not None:
-            frame = cv2.resize(frame, (CAM_W, CAM_H),
-                               interpolation=cv2.INTER_LINEAR)
-            img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            img_tk = ImageTk.PhotoImage(image=img)
-            self.video_label.configure(image=img_tk, text="")
-            self._current_frame = img_tk
-
-        self.root.after(VIDEO_REFRESH_MS, self._update_video_loop)
-
-    # =========================================================================
+    # =====================================================================
     #  ACTIONS
-    # =========================================================================
+    # =====================================================================
 
     def start_system(self):
-        self.log("═" * 44)
-        self.log("Initialising mission systems…")
+        self._state.log("═" * 44)
+        self._state.log("Initialising mission systems…")
 
         for name, fn in [("Video backend", self.video_backend.start),
-                         ("Telemetry link", self.telemetry_backend.start)]:
-            self.log(f"  ▶ {name} starting…")
+                         ("Telemetry link",
+                          self.telemetry_backend.start)]:
+            self._state.log(f"  ▶ {name} starting…")
             fn()
 
-        self.log("  ▶ Video display loop starting…")
-        self._update_video_loop()
+        self._state.log("  ▶ Video display loop starting…")
 
-        self.telemetry_labels["STATUS"].config(text="ONLINE", fg=THEME["success"])
-        self.telemetry_labels["LINK"].config(text="ACTIVE", fg=THEME["success"])
+        self.telemetry_labels["STATUS"].config(
+            text="ONLINE", fg=THEME["success"])
+        self.telemetry_labels["LINK"].config(
+            text="ACTIVE", fg=THEME["success"])
         self.status_dot.config(fg=THEME["success"])
 
         self._set_system("Telemetry Link", "ACTIVE", THEME["success"])
@@ -905,57 +971,62 @@ class RobotApp:
         self._set_system("Battery", "MONITOR", THEME["warning"])
 
         self.btn_connect.set_disabled(True)
-        self.btn_connect.update_label("SYSTEM ACTIVE", THEME["text_dim"])
+        self.btn_connect.update_label("SYSTEM ACTIVE",
+                                      THEME["text_dim"])
         self.btn_arm.set_disabled(False)
         self.btn_arm.update_label("ARM VEHICLE", THEME["warning"])
 
-        self.log("Systems online.")
-        self.log("Awaiting MAVLink heartbeat…")
-        self.log("═" * 44)
+        self._state.log("Systems online.")
+        self._state.log("Awaiting MAVLink heartbeat…")
+        self._state.log("═" * 44)
 
     def toggle_arm(self):
         if not self.telemetry_backend.running:
-            self.log("⚠  Not connected.")
+            self._state.log("⚠  Not connected.")
             return
 
         new_state = not self.armed_state
         action = "Arming" if new_state else "Disarming"
-        self.log(f"{action}…")
-        self.telemetry_backend.arm_disarm(new_state)
+        self._state.log(f"{action}…")
+
+        cmd_name = "arm" if new_state else "disarm"
+        self._state.send_command(Command(name=cmd_name))
         self._sync_armed_state(new_state)
 
         if new_state:
-            self.log("Vehicle ARMED — keyboard control active.")
+            self._state.log(
+                "Vehicle ARMED — keyboard control active.")
         else:
-            self.log("Vehicle DISARMED.")
+            self._state.log("Vehicle DISARMED.")
 
     def emergency_stop(self):
-        self.log("⚠  EMERGENCY STOP!")
+        self._state.log("⚠  EMERGENCY STOP!")
         if self.telemetry_backend.running:
-            self.telemetry_backend.stop_motors()
+            self._state.send_command(Command(name="stop_motors"))
         for k in self._keys:
             self._keys[k] = False
-        self.thruster_panel.update_values([0.0] * 6)
+        self.thruster_panel.update_values(
+            [0.0] * THRUSTER_COUNT)
 
     def deploy_mission(self):
         if not self.armed_state:
-            self.log("⚠  Arm vehicle first.")
+            self._state.log("⚠  Arm vehicle first.")
             return
-        self.log("Deploying…")
+        self._state.log("Deploying…")
         self.btn_deploy.set_disabled(True)
         self.btn_deploy.update_label("DEPLOYING…", THEME["text_dim"])
 
     def retrieve_mission(self):
         if not self.telemetry_backend.running:
-            self.log("⚠  Not connected.")
+            self._state.log("⚠  Not connected.")
             return
-        self.log("Retrieving…")
+        self._state.log("Retrieving…")
         self.btn_deploy.set_disabled(False)
         self.btn_deploy.update_label("DEPLOY", THEME["cyan"])
 
-    # =========================================================================
+    # =====================================================================
     #  UTILITIES
-    # =========================================================================
+    # =====================================================================
 
     def _set_system(self, name, status, color):
         if name in self.system_labels:
@@ -970,7 +1041,7 @@ class RobotApp:
                 text=datetime.utcnow().strftime("%H:%M:%S"))
         self.root.after(1000, self._tick_clock)
 
-    def log(self, message: str):
+    def _log_to_widget(self, message: str):
         ts = datetime.now().strftime("%H:%M:%S.%f")[:-3]
         self.log_box.config(state=tk.NORMAL)
         self.log_box.insert(tk.END, f"[{ts}]  {message}\n")
@@ -982,21 +1053,21 @@ class RobotApp:
         self.log_box.delete(1.0, tk.END)
         self.log_box.config(state=tk.DISABLED)
 
-    # =========================================================================
+    # =====================================================================
     #  SHUTDOWN
-    # =========================================================================
+    # =====================================================================
 
     def close_app(self):
-        self.log("◼  SHUTDOWN initiated.")
+        self._state.log("◼  SHUTDOWN initiated.")
         try:
             if self.telemetry_backend.running:
-                self.telemetry_backend.stop_motors()
+                self._state.send_command(Command(name="stop_motors"))
             if self.armed_state:
-                self.telemetry_backend.arm_disarm(False)
+                self._state.send_command(Command(name="disarm"))
             self.video_backend.stop()
             self.telemetry_backend.stop()
         except Exception as e:
-            self.log(f"  Warning: {e}")
+            self._state.log(f"  Warning: {e}")
         self.root.after(SHUTDOWN_DELAY_MS, self.root.destroy)
 
 
