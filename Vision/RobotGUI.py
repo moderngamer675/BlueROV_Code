@@ -12,6 +12,8 @@ from tkinter import scrolledtext, font
 from PIL import Image, ImageTk
 import cv2
 from datetime import datetime
+# Add to the imports section of RobotApp.py
+from motor_controller import MotionController, KEY_TO_DIRECTION
 
 from rov_config import (
     GUI_POLL_MS, THRUSTER_COUNT, THRUSTER_LABELS, THRUSTER_ROLES
@@ -50,7 +52,12 @@ HUD_MAP = {
     "PITCH": "HUD_PCH", "BATTERY": "HUD_BAT", "CURRENT": "HUD_CUR",
 }
 
-MOVEMENT_KEYS = ('w', 's', 'a', 'd', 'q', 'e', 'r', 'f')
+# REMOVE these lines:
+# CONTROL_SPEED = 0.30
+# MOVEMENT_KEYS = ('w', 's', 'a', 'd', 'q', 'e', 'r', 'f')
+
+# REPLACE with (derived from motor_controller):
+MOVEMENT_KEYS = tuple(KEY_TO_DIRECTION.keys())
 
 
 # =============================================================================
@@ -402,10 +409,14 @@ class RobotApp:
 
         self._keys = {k: False for k in MOVEMENT_KEYS}
 
-        # ── Shared state bridge ──────────────────────────────────────────
+        # ── Shared state bridge ──────────────────────────────────────
         self._state = SharedState()
 
-        # ── Backend instances ────────────────────────────────────────────
+        # ── Motion controller (translates directions → MANUAL_CONTROL) ─
+        self.motion = MotionController(self._state)
+        self.motion.set_speed_profile("bench")  # safe default for testing
+
+        # ── Backend instances ────────────────────────────────────────
         self.video_backend = RobotLogic(self._state)
         self.telemetry_backend = TelemetryHandler(self._state)
 
@@ -417,9 +428,12 @@ class RobotApp:
         self._log_to_widget(
             "Mission Control initialised. Awaiting connection.")
         self._log_to_widget(
+            f"Speed: {self.motion.profile.upper()} "
+            f"({self.motion.speed_percent:.0f}%)")
+        self._log_to_widget(
             "Keys: W/S A/D Q/E R/F  |  SPACE = Emergency Stop")
 
-        # ── Start periodic GUI poll loops ────────────────────────────────
+    # ── Start periodic GUI poll loops ────────────────────────────
         self._start_periodic(self._blink_tick, BLINK_INTERVAL_MS)
         self._start_periodic(self._thruster_tick, THRUSTER_REFRESH_MS)
         self._start_periodic(self._poll_telemetry, TELEMETRY_POLL_MS)
@@ -781,17 +795,10 @@ class RobotApp:
         self._keys[key] = state
 
     def _process_keys(self):
+        """Translate held keys into movement via MotionController."""
         if self.armed_state and self.telemetry_backend.running:
-            S = CONTROL_SPEED
-            pairs = [('w', 's'), ('d', 'a'), ('e', 'q'), ('r', 'f')]
-            vals = [S if self._keys[p] else (-S if self._keys[n] else 0.0)
-                    for p, n in pairs]
-
-            if any(self._keys.values()):
-                self._state.send_command(Command(
-                    name="set_motion",
-                    kwargs=dict(forward=vals[0], lateral=vals[1],
-                                throttle=vals[3], yaw=vals[2])))
+        # Let the motion controller handle the translation
+            self.motion.move_from_keys(self._keys)
 
         self.root.after(100, self._process_keys)
 
@@ -1001,12 +1008,15 @@ class RobotApp:
 
     def emergency_stop(self):
         self._state.log("⚠  EMERGENCY STOP!")
+        # Immediate neutral via motion controller
+        self.motion.stop()
+        # Also send direct stop command as backup
         if self.telemetry_backend.running:
             self._state.send_command(Command(name="stop_motors"))
+        # Clear all key states
         for k in self._keys:
             self._keys[k] = False
-        self.thruster_panel.update_values(
-            [0.0] * THRUSTER_COUNT)
+        self.thruster_panel.update_values([0.0] * THRUSTER_COUNT)
 
     def deploy_mission(self):
         if not self.armed_state:
