@@ -1,4 +1,3 @@
-# Translates intentions to MANUAL_CONTROL for 4-thruster vectored ROV
 from shared_state import SharedState, Command
 from rov_config import MAX_SPEED_SURFACE, MAX_SPEED_UNDERWATER, MAX_SPEED_BENCH, THRUSTER_COUNT
 
@@ -8,12 +7,11 @@ MOVEMENT_VECTORS = {
     "forward": {"x": +1.0}, "backward": {"x": -1.0},
     "strafe_right": {"y": +1.0}, "strafe_left": {"y": -1.0},
     "yaw_cw": {"r": +1.0}, "yaw_ccw": {"r": -1.0},
-    "ascend": {"z": +1.0}, "descend": {"z": -1.0},
 }
 
 KEY_TO_DIRECTION = {
     "w": "forward", "s": "backward", "d": "strafe_right", "a": "strafe_left",
-    "e": "yaw_cw", "q": "yaw_ccw", "r": "ascend", "f": "descend",
+    "e": "yaw_cw", "q": "yaw_ccw",
 }
 
 SPEED_PROFILES = {
@@ -47,12 +45,10 @@ class MotionController:
             vector = MOVEMENT_VECTORS.get(direction)
             if not vector: continue
             for axis, scale in vector.items():
-                if axis == "z": axes["z"] += int(scale * self._speed * 0.5)
-                else: axes[axis] += int(scale * self._speed)
+                axes[axis] += int(scale * self._speed)
         
         axes["x"] = max(-1000, min(1000, axes["x"]))
         axes["y"] = max(-1000, min(1000, axes["y"]))
-        axes["z"] = max(0, min(1000, axes["z"]))
         axes["r"] = max(-1000, min(1000, axes["r"]))
         self._send(axes)
 

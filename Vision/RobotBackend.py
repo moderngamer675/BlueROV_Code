@@ -1,4 +1,3 @@
-# Handles UDP video stream reception and YOLOv8 AI overlay
 import threading, socket, time, numpy as np, cv2
 from rov_config import LAPTOP_IP, VIDEO_PORT, FRAME_WIDTH, FRAME_HEIGHT, YOLO_MODEL, YOLO_CONFIDENCE, YOLO_ENABLED
 from shared_state import SharedState

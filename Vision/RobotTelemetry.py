@@ -1,11 +1,10 @@
-# MAVLink communication handler for BlueROV2
 import threading, time
 from pymavlink import mavutil
 from rov_config import MAV_PORT, SOURCE_SYSTEM, THRUSTER_COUNT
 from shared_state import SharedState, Command
 
 RAD2DEG = 57.2958
-BATTERY_THRESHOLDS = [(15.5, "#00E676"), (14.5, "#FFD600"), (13.5, "#FF9100"), (0.0, "#FF1744")]
+BATTERY_THRESHOLDS = [(15.5, "#00E676"), (14.5, "#FFD600"), (13.5, "#FF9100"), (0.0, "#FF3366")]
 
 class TelemetryHandler:
     def __init__(self, state: SharedState):
@@ -67,7 +66,7 @@ class TelemetryHandler:
         self._state.update_raw_telemetry(mode=mode, armed=armed)
         self.armed = armed
         self._state.put_telemetry_update("STATUS", mode)
-        self._state.put_telemetry_update("ARMED_STATE", " ⚠ ARMED" if armed else "SAFE", "#FF1744" if armed else "#00E676")
+        self._state.put_telemetry_update("ARMED_STATE", " ⚠ ARMED" if armed else "SAFE", "#FF3366" if armed else "#00E676")
 
     def _on_sys_status(self, msg):
         v, a = msg.voltage_battery / 1000.0, msg.current_battery / 100.0 if msg.current_battery != -1 else 0.0
@@ -77,9 +76,8 @@ class TelemetryHandler:
         self._state.put_telemetry_update("CURRENT", f"{a:.1f}")
 
     def _on_vfr_hud(self, msg):
-        depth = abs(msg.alt)
-        self._state.update_raw_telemetry(depth=depth, heading=msg.heading, throttle=msg.throttle)
-        self._state.put_telemetry_update("DEPTH", f"{depth:.2f}"); self._state.put_telemetry_update("HEADING", f"{msg.heading}")
+        self._state.update_raw_telemetry(heading=msg.heading, throttle=msg.throttle)
+        self._state.put_telemetry_update("HEADING", f"{msg.heading}")
 
     def _on_attitude(self, msg):
         r, p, y = msg.roll * RAD2DEG, msg.pitch * RAD2DEG, msg.yaw * RAD2DEG

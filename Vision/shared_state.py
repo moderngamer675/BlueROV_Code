@@ -1,4 +1,3 @@
-# Thread-safe bridge between background threads and the tkinter main loop.
 import threading, queue, copy
 from collections import deque
 from dataclasses import dataclass, field
@@ -17,7 +16,7 @@ class SharedState:
     def __init__(self):
         self._telem_lock, self._raw_telem_lock, self._frame_lock = threading.Lock(), threading.Lock(), threading.Lock()
         self._telem_updates: list[TelemetryUpdate] = []
-        self._raw_telem: dict = {"mode": "—", "armed": False, "battery_v": 0.0, "battery_a": 0.0, "depth": 0.0, 
+        self._raw_telem: dict = {"mode": "—", "armed": False, "battery_v": 0.0, "battery_a": 0.0, 
                                  "heading": 0, "throttle": 0, "roll": 0.0, "pitch": 0.0, "yaw": 0.0, 
                                  "pressure": 0.0, "temp": 0.0, "servo": [1500] * 4}
         self._video_frame, self._video_fps = None, 0.0

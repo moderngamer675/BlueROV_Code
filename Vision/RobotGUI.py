@@ -1,4 +1,3 @@
-# Mission Control GUI (Thread-safe via SharedState)
 import tkinter as tk
 from tkinter import scrolledtext, font
 from PIL import Image, ImageTk
@@ -10,18 +9,22 @@ from shared_state import SharedState, Command
 from RobotBackend import RobotLogic
 from RobotTelemetry import TelemetryHandler
 
-THEME = {"bg": "#060912", "panel": "#0D1117", "card": "#161B27", "card_hover": "#1E2535", "border": "#1F2D45", "border_bright": "#2A4080",
-         "text": "#C9D8E8", "text_dim": "#5A7090", "text_bright": "#EAF4FF", "accent": "#00C8FF", "accent_dim": "#005F78",
-         "success": "#00E676", "success_dim": "#004D26", "danger": "#FF1744", "danger_dim": "#4D0010", "warning": "#FFD600",
-         "cyan": "#18FFFF", "purple": "#7C4DFF", "log_bg": "#020408", "log_text": "#00E676"}
+THEME = {
+    "bg": "#1E1E24", "panel": "#25252D", "card": "#2D2D36", "card_hover": "#3E3E4A", 
+    "border": "#3F3F4A", "border_bright": "#00A8FF", "text": "#E0E0E0", "text_dim": "#8A8A93", 
+    "text_bright": "#FFFFFF", "accent": "#00A8FF", "accent_dim": "#00538C", 
+    "success": "#00E676", "success_dim": "#2E7D32", "danger": "#FF3366", "danger_dim": "#C62828", 
+    "warning": "#FFB300", "cyan": "#29B6F6", "purple": "#AB47BC", 
+    "log_bg": "#121215", "log_text": "#BDBDBD"
+}
 
 CAM_W, CAM_H = 720, 480
 BLINK_INTERVAL_MS, THRUSTER_REFRESH_MS, TELEMETRY_POLL_MS = 800, 50, 200
-HUD_MAP = {"DEPTH": "HUD_DEPTH", "HEADING": "HUD_HDG", "ROLL": "HUD_ROLL", "PITCH": "HUD_PCH", "BATTERY": "HUD_BAT", "CURRENT": "HUD_CUR"}
+HUD_MAP = {"HEADING": "HUD_HDG", "ROLL": "HUD_ROLL", "PITCH": "HUD_PCH", "BATTERY": "HUD_BAT", "CURRENT": "HUD_CUR"}
 MOVEMENT_KEYS = tuple(KEY_TO_DIRECTION.keys())
 
-def make_label(parent, text, size=7, bold=True, color=None, **kw):
-    return tk.Label(parent, text=text, font=("Courier New", size, "bold" if bold else "normal"), bg=parent["bg"], fg=color or THEME["text_dim"], **kw)
+def make_label(parent, text, size=8, bold=True, color=None, **kw):
+    return tk.Label(parent, text=text, font=("Segoe UI", size, "bold" if bold else "normal"), bg=parent["bg"], fg=color or THEME["text_dim"], **kw)
 
 def make_bar(parent, color, side=tk.LEFT, width=3):
     bar = tk.Frame(parent, bg=color, width=width); bar.pack(side=side, fill=tk.Y); return bar
@@ -50,7 +53,7 @@ class SeparatorLine(tk.Canvas):
         w, cy, c = self.winfo_width(), 7, self._color
         if self._label:
             self.create_line(0, cy, w*0.06, cy, fill=c, width=1)
-            self.create_text(w*0.07, cy, text=self._label, anchor="w", fill=c, font=("Courier New", 7, "bold"))
+            self.create_text(w*0.07, cy, text=self._label, anchor="w", fill=c, font=("Segoe UI", 8, "bold"))
             self.create_line(w*0.07 + len(self._label)*5.5 + 6, cy, w, cy, fill=c, width=1)
         else: self.create_line(0, cy, w, cy, fill=c, width=1)
 
@@ -61,9 +64,9 @@ class GlowButton(tk.Frame):
         self._bar = tk.Frame(self, bg=self._active_color, width=4); self._bar.pack(side=tk.LEFT, fill=tk.Y)
         self._body = tk.Frame(self, bg=THEME["card"]); self._body.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         row = tk.Frame(self._body, bg=THEME["card"]); row.pack(fill=tk.BOTH, expand=True, padx=10, pady=8)
-        if icon: tk.Label(row, text=icon, font=("Courier New", 10), bg=THEME["card"], fg=self._active_color).pack(side=tk.LEFT)
-        self._lbl = tk.Label(row, text=text, font=("Courier New", 9, "bold"), bg=THEME["card"], fg=self._active_color, padx=4); self._lbl.pack(side=tk.LEFT)
-        self._chev = tk.Label(row, text="›", font=("Courier New", 12, "bold"), bg=THEME["card"], fg=THEME["text_dim"]); self._chev.pack(side=tk.RIGHT)
+        if icon: tk.Label(row, text=icon, font=("Segoe UI", 10), bg=THEME["card"], fg=self._active_color).pack(side=tk.LEFT)
+        self._lbl = tk.Label(row, text=text, font=("Segoe UI", 9, "bold"), bg=THEME["card"], fg=self._active_color, padx=4); self._lbl.pack(side=tk.LEFT)
+        self._chev = tk.Label(row, text="›", font=("Segoe UI", 12, "bold"), bg=THEME["card"], fg=THEME["text_dim"]); self._chev.pack(side=tk.RIGHT)
         for w in (self, self._body, self._bar, row, self._lbl, self._chev):
             w.bind("<Enter>", self._on_enter); w.bind("<Leave>", self._on_leave); w.bind("<Button-1>", self._on_click)
 
@@ -89,14 +92,14 @@ class TelemetryCard(tk.Frame):
         color = color or THEME["accent"]
         super().__init__(parent, bg=THEME["card"], relief=tk.FLAT, **kw)
         make_label(self, label, anchor="w").pack(fill=tk.X, padx=8, pady=(6, 0))
-        self._val_lbl = tk.Label(self, text=value, font=("Courier New", 13, "bold"), bg=THEME["card"], fg=color, anchor="w"); self._val_lbl.pack(fill=tk.X, padx=8)
+        self._val_lbl = tk.Label(self, text=value, font=("Consolas", 14, "bold"), bg=THEME["card"], fg=color, anchor="w"); self._val_lbl.pack(fill=tk.X, padx=8)
         make_label(self, unit, bold=False, anchor="w").pack(fill=tk.X, padx=8, pady=(0, 4))
         tk.Frame(self, bg=color, height=2).pack(fill=tk.X)
     def update(self, value, color=None):
         self._val_lbl.config(text=str(value), **({"fg": color} if color else {}))
 
 class ThrusterBar(tk.Frame):
-    _POS, _NEG = ["#004D20", "#007A30", "#00B344", "#00E676"], ["#4D3300", "#997700", "#CC9900", "#FFD600"]
+    _POS, _NEG = ["#004D20", "#007A30", "#00B344", "#00E676"], ["#4D3300", "#997700", "#CC9900", "#FFB300"]
     def __init__(self, parent, label, role, index, **kw):
         super().__init__(parent, bg=THEME["card"], **kw)
         self._target = self._current = 0.0
@@ -104,7 +107,7 @@ class ThrusterBar(tk.Frame):
         make_label(badge, f"#{index+1}").pack(side=tk.LEFT)
         make_label(badge, label, size=8, color=THEME["accent"]).pack(side=tk.RIGHT)
         self._canvas = tk.Canvas(self, bg=THEME["log_bg"], highlightthickness=1, highlightbackground=THEME["border"], width=44, height=140); self._canvas.pack(padx=4, pady=2)
-        make_label(self, role, size=6).pack(pady=(0, 1))
+        make_label(self, role, size=7).pack(pady=(0, 1))
         self._pct_lbl = make_label(self, "0%", color=THEME["success"]); self._pct_lbl.pack(pady=(0, 4))
         self._accent = tk.Frame(self, height=2, bg=THEME["border"]); self._accent.pack(fill=tk.X)
         self._canvas.bind("<Configure>", lambda e: self._redraw())
@@ -148,7 +151,7 @@ class ThrusterPanel(tk.Frame):
         make_label(tb, "  THRUSTER OUTPUT", size=9, color=THEME["success"]).pack(side=tk.LEFT, pady=2)
         self._armed_badge = make_label(tb, "   ◼  DISARMED  "); self._armed_badge.pack(side=tk.RIGHT, padx=8)
         self._peak_lbl = make_label(tb, "PEAK: —%"); self._peak_lbl.pack(side=tk.RIGHT, padx=12)
-        make_label(tb, "W/S=Fwd  A/D=Strafe  Q/E=Yaw  R/F=Depth  SPACE=Stop", bold=False).pack(side=tk.LEFT, padx=16)
+        make_label(tb, "W/S=Fwd  A/D=Strafe  Q/E=Yaw  SPACE=Stop", bold=False).pack(side=tk.LEFT, padx=16)
         
         bar_row = tk.Frame(self, bg=THEME["panel"]); bar_row.pack(fill=tk.X, padx=4, pady=(2, 4))
         for i, (lbl, role) in enumerate(zip(labels, roles)):
@@ -182,7 +185,7 @@ class RobotApp:
         self._bind_keys()
         self.root.protocol("WM_DELETE_WINDOW", self.close_app)
         
-        for msg in ["Mission Control initialised.", f"Speed: {self.motion.profile.upper()} ({self.motion.speed_percent:.0f}%)", "Keys: W/S A/D Q/E R/F  |  SPACE = Stop"]: self._log_to_widget(msg)
+        for msg in ["Mission Control initialised.", f"Speed: {self.motion.profile.upper()} ({self.motion.speed_percent:.0f}%)", "Keys: W/S A/D Q/E  |  SPACE = Stop"]: self._log_to_widget(msg)
         
         for func, ms in [(self._blink_tick, BLINK_INTERVAL_MS), (self._thruster_tick, THRUSTER_REFRESH_MS), 
                          (self._poll_telemetry, TELEMETRY_POLL_MS), (self._poll_shared_state, GUI_POLL_MS)]: self._start_periodic(func, ms)
@@ -192,12 +195,12 @@ class RobotApp:
         _loop()
 
     def _configure_window(self):
-        self.root.title("BlueROV2 — Mission Control"); self.root.geometry("1420x900"); self.root.resizable(False, False); self.root.configure(bg=THEME["bg"])
-        self.fnt_header = font.Font(family="Courier New", size=14, weight="bold")
-        self.fnt_sub = font.Font(family="Courier New", size=9, weight="bold")
-        self.fnt_lbl = font.Font(family="Courier New", size=7, weight="bold")
-        self.fnt_log = font.Font(family="Courier New", size=8)
-        self.fnt_mono_sm = font.Font(family="Courier New", size=8)
+        self.root.title("BlueROV2 — Surface Vessel Control"); self.root.geometry("1420x900"); self.root.resizable(False, False); self.root.configure(bg=THEME["bg"])
+        self.fnt_header = font.Font(family="Segoe UI", size=15, weight="bold")
+        self.fnt_sub = font.Font(family="Segoe UI", size=10, weight="bold")
+        self.fnt_lbl = font.Font(family="Segoe UI", size=8, weight="bold")
+        self.fnt_log = font.Font(family="Consolas", size=9)
+        self.fnt_mono_sm = font.Font(family="Consolas", size=9)
 
     def _build_ui(self):
         outer = tk.Frame(self.root, bg=THEME["bg"]); outer.pack(fill=tk.BOTH, expand=True, padx=10, pady=8)
@@ -211,8 +214,8 @@ class RobotApp:
         hdr = tk.Frame(parent, bg=THEME["panel"], height=56); hdr.pack(fill=tk.X); hdr.pack_propagate(False)
         tk.Frame(hdr, bg=THEME["accent"], width=4).pack(side=tk.LEFT, fill=tk.Y)
         title_blk = tk.Frame(hdr, bg=THEME["panel"]); title_blk.pack(side=tk.LEFT, fill=tk.Y, padx=(14, 0))
-        tk.Label(title_blk, text="BLUEROV2  MISSION CONTROL", font=self.fnt_header, bg=THEME["panel"], fg=THEME["accent"]).pack(anchor="w", pady=(8, 0))
-        tk.Label(title_blk, text="Underwater Vehicle Operations", font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["text_dim"]).pack(anchor="w")
+        tk.Label(title_blk, text="BLUEROV2  SURFACE VESSEL CONTROL", font=self.fnt_header, bg=THEME["panel"], fg=THEME["accent"]).pack(anchor="w", pady=(8, 0))
+        tk.Label(title_blk, text="Operations Dashboard", font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["text_dim"]).pack(anchor="w")
         strip = tk.Frame(hdr, bg=THEME["panel"]); strip.pack(side=tk.RIGHT, fill=tk.Y, padx=16)
         
         for abbr, val, key, color in [("SYS", "OFFLINE", "STATUS", THEME["danger"]), ("LINK", "NO LINK", "LINK", THEME["danger"]), 
@@ -221,7 +224,7 @@ class RobotApp:
             tk.Label(col, text=abbr, font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["text_dim"]).pack()
             self.telemetry_labels[key] = tk.Label(col, text=val, font=self.fnt_sub, bg=THEME["panel"], fg=color); self.telemetry_labels[key].pack()
         self._tick_clock()
-        self.status_dot = tk.Label(strip, text="●", font=("Courier New", 16, "bold"), bg=THEME["panel"], fg=THEME["danger"]); self.status_dot.pack(side=tk.LEFT, padx=(4, 0), pady=8)
+        self.status_dot = tk.Label(strip, text="●", font=("Consolas", 16, "bold"), bg=THEME["panel"], fg=THEME["danger"]); self.status_dot.pack(side=tk.LEFT, padx=(4, 0), pady=8)
 
     def _build_left_column(self, parent):
         left = tk.Frame(parent, bg=THEME["bg"], width=CAM_W + 4); left.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 8)); left.pack_propagate(False)
@@ -231,11 +234,11 @@ class RobotApp:
         self.ai_status_lbl = tk.Label(tb, text="AI: LOADING", font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["warning"]); self.ai_status_lbl.pack(side=tk.RIGHT, padx=8)
         self.cam_status_lbl = tk.Label(tb, text="● NO SIGNAL", font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["danger"]); self.cam_status_lbl.pack(side=tk.RIGHT, padx=8)
         cam_inner = tk.Frame(tk.Frame(left, bg=THEME["border"]).pack() or left, bg="black", width=CAM_W, height=CAM_H); cam_inner.pack(padx=1, pady=1); cam_inner.pack_propagate(False)
-        self.video_label = tk.Label(cam_inner, text=" ◈   AWAITING VIDEO STREAM   ◈ \n\nConnect to begin.", bg="black", fg=THEME["accent_dim"], font=("Courier New", 11, "bold"), width=CAM_W, height=CAM_H, compound=tk.CENTER)
+        self.video_label = tk.Label(cam_inner, text=" ◈   AWAITING VIDEO STREAM   ◈ \n\nConnect to begin.", bg="black", fg=THEME["accent_dim"], font=("Segoe UI", 12, "bold"), width=CAM_W, height=CAM_H, compound=tk.CENTER)
         self.video_label.pack()
         
         hud = tk.Frame(left, bg=THEME["panel"], height=34, width=CAM_W + 4); hud.pack(fill=tk.X, pady=(3, 0)); hud.pack_propagate(False)
-        items = [("DEPTH", "HUD_DEPTH"), ("HEADING", "HUD_HDG"), ("ROLL", "HUD_ROLL"), ("PITCH", "HUD_PCH"), ("BATTERY", "HUD_BAT"), ("CURRENT", "HUD_CUR")]
+        items = [("HEADING", "HUD_HDG"), ("ROLL", "HUD_ROLL"), ("PITCH", "HUD_PCH"), ("BATTERY", "HUD_BAT"), ("CURRENT", "HUD_CUR")]
         for i, (lbl_txt, key) in enumerate(items):
             cell = tk.Frame(hud, bg=THEME["panel"]); cell.pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
             tk.Label(cell, text=lbl_txt, font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["text_dim"]).pack(pady=(3, 0))
@@ -254,7 +257,7 @@ class RobotApp:
         
         self._section_header(sf, "VEHICLE TELEMETRY", THEME["accent"])
         grid = tk.Frame(sf, bg=THEME["panel"]); grid.pack(fill=tk.X, padx=8, pady=(0, 4)); grid.columnconfigure((0, 1), weight=1)
-        for idx, (key, unit, col) in enumerate([("BATTERY", "V", THEME["warning"]), ("CURRENT", "A", THEME["accent"]), ("DEPTH", "m", THEME["cyan"]), ("HEADING", "°", THEME["cyan"]), ("ROLL", "°", THEME["purple"]), ("PITCH", "°", THEME["purple"])]):
+        for idx, (key, unit, col) in enumerate([("BATTERY", "V", THEME["warning"]), ("CURRENT", "A", THEME["accent"]), ("HEADING", "°", THEME["cyan"]), ("ROLL", "°", THEME["purple"]), ("PITCH", "°", THEME["purple"])]):
             self.telemetry_cards[key] = TelemetryCard(grid, key, "—", unit, col); self.telemetry_cards[key].grid(row=idx//2, column=idx%2, padx=2, pady=2, sticky="nsew")
 
         self._section_header(sf, "SYSTEMS STATUS", THEME["warning"])
@@ -283,7 +286,7 @@ class RobotApp:
 
     def _build_log_panel(self, parent):
         wrapper = tk.Frame(parent, bg=THEME["panel"]); wrapper.pack(fill=tk.X, pady=(4, 0))
-        tb = tk.Frame(wrapper, bg=THEME["panel"], height=20); tb.pack(fill=tk.X); tb.pack_propagate(False)
+        tb = tk.Frame(wrapper, bg=THEME["panel"], height=22); tb.pack(fill=tk.X); tb.pack_propagate(False)
         make_bar(tb, THEME["success"]); tk.Label(tb, text="  MISSION LOG", font=self.fnt_sub, bg=THEME["panel"], fg=THEME["success"]).pack(side=tk.LEFT, pady=1)
         tk.Button(tb, text="CLEAR", font=self.fnt_lbl, bg=THEME["panel"], fg=THEME["text_dim"], bd=0, cursor="hand2", command=self._clear_log).pack(side=tk.RIGHT, padx=8)
         self.log_box = scrolledtext.ScrolledText(wrapper, font=self.fnt_log, bg=THEME["log_bg"], fg=THEME["log_text"], insertbackground=THEME["log_text"], selectbackground=THEME["success_dim"], height=4, bd=0, relief=tk.FLAT)
