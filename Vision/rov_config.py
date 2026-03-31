@@ -1,4 +1,4 @@
-# Central configuration for BlueROV2
+# Central configuration for BlueROV2 Surface Vessel
 PI_IP = "192.168.2.2"
 LAPTOP_IP = "192.168.2.1"
 PI_USERNAME, PI_PASSWORD = "pi", "raspberry"
