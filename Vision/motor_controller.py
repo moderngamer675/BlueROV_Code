@@ -58,20 +58,11 @@ class MotionController:
         self.move(*active_directions)
         return True
 
-    # ── NEW: Gamepad analog input ──
-
     def move_from_gamepad(self, left_x: float, left_y: float, right_x: float,
                           lt: float = 0.0, rt: float = 0.0) -> bool:
         """
         Accept analog stick values (-1.0 to +1.0) and trigger values (0.0 to 1.0).
         Converts to MANUAL_CONTROL command scaled by current speed profile.
-        Returns True if any input was non-zero.
-        
-        left_y  = forward/backward (positive = forward)
-        left_x  = strafe (positive = right)
-        right_x = yaw (positive = clockwise)
-        rt      = ascend (0-1)
-        lt      = descend (0-1)
         """
         has_input = (abs(left_x) > 0.01 or abs(left_y) > 0.01 or
                      abs(right_x) > 0.01 or lt > 0.01 or rt > 0.01)
@@ -92,6 +83,27 @@ class MotionController:
         }
         self._send(axes)
         return True
+
+    # ── DC Motor toggles (NEW) ──
+
+    def toggle_motor_a(self):
+        """Toggle Motor A via SharedState motor command queue."""
+        states = self._state.get_motor_states()
+        new_state = not states.get("mot_a", False)
+        self._state.send_motor_command("mot_a", new_state)
+        self._state.log(f"🔧 Motor A → {'ON' if new_state else 'OFF'}")
+
+    def toggle_motor_b(self):
+        """Toggle Motor B via SharedState motor command queue."""
+        states = self._state.get_motor_states()
+        new_state = not states.get("mot_b", False)
+        self._state.send_motor_command("mot_b", new_state)
+        self._state.log(f"🔧 Motor B → {'ON' if new_state else 'OFF'}")
+
+    def all_motors_off(self):
+        """Kill all DC motors."""
+        self._state.send_motor_command("mot_all", False)
+        self._state.log("🔧 All DC motors → OFF")
 
     def stop(self): self._send(NEUTRAL)
 

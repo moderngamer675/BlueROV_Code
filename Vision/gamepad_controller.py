@@ -22,6 +22,7 @@ from rov_config import (
     GAMEPAD_AXIS_RIGHT_X, GAMEPAD_AXIS_LT, GAMEPAD_AXIS_RT,
     GAMEPAD_BTN_A, GAMEPAD_BTN_B, GAMEPAD_BTN_X, GAMEPAD_BTN_Y,
     GAMEPAD_BTN_LB, GAMEPAD_BTN_RB, GAMEPAD_BTN_BACK, GAMEPAD_BTN_START,
+    GAMEPAD_BTN_L3, GAMEPAD_BTN_R3,
     GAMEPAD_HAT_INDEX, GAMEPAD_SPEED_PROFILES
 )
 from shared_state import Command
@@ -306,14 +307,16 @@ class GamepadThread(threading.Thread):
             self._state.log("🎮 B → DISARM")
 
         elif btn_id == GAMEPAD_BTN_Y:
-            # Emergency stop
+            # Emergency stop — thrusters AND DC motors
             self._state.send_command(Command(name="stop_motors"))
             self._smooth_lx = self._smooth_ly = self._smooth_rx = 0.0
             self._smooth_lt = self._smooth_rt = 0.0
-            self._state.log("🎮 ⚠ Y → EMERGENCY STOP")
+            # Also kill DC motors
+            self._motion.all_motors_off()
+            self._state.log("🎮 ⚠ Y → EMERGENCY STOP (thrusters + DC motors)")
 
         elif btn_id == GAMEPAD_BTN_X:
-            # Toggle something useful — cycle speed profile
+            # Cycle speed profile
             self._speed_index = (self._speed_index + 1) % len(GAMEPAD_SPEED_PROFILES)
             profile = GAMEPAD_SPEED_PROFILES[self._speed_index]
             self._motion.set_speed_profile(profile)
@@ -332,6 +335,16 @@ class GamepadThread(threading.Thread):
             profile = GAMEPAD_SPEED_PROFILES[self._speed_index]
             self._motion.set_speed_profile(profile)
             self._state.log(f"🎮 RB → Speed: {profile.upper()}")
+
+        elif btn_id == GAMEPAD_BTN_L3:
+            # Left stick click → toggle Motor A
+            self._motion.toggle_motor_a()
+            self._state.log("🎮 L3 → Toggle Motor A")
+
+        elif btn_id == GAMEPAD_BTN_R3:
+            # Right stick click → toggle Motor B
+            self._motion.toggle_motor_b()
+            self._state.log("🎮 R3 → Toggle Motor B")
 
         elif btn_id == GAMEPAD_BTN_START:
             self._state.log("🎮 START pressed")

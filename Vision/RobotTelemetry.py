@@ -1,11 +1,15 @@
 import threading, time
 from pymavlink import mavutil
-from rov_config import MAV_PORT, SOURCE_SYSTEM, THRUSTER_COUNT, SENSOR_PORT
+from rov_config import (
+    MAV_PORT, SOURCE_SYSTEM, THRUSTER_COUNT, SENSOR_PORT,
+    MOTOR_CMD_PORT, PI_IP, SENSOR_NAMES, MOTOR_STATUS_NAMES,
+    MOTOR_ON_VALUE, MOTOR_OFF_VALUE
+)
 from shared_state import SharedState, Command
 
 RAD2DEG = 57.2958
 BATTERY_THRESHOLDS = [(15.5, "#00E676"), (14.5, "#FFD600"), (13.5, "#FF9100"), (0.0, "#FF3366")]
-SENSOR_NAMES = {"dst_front", "dst_left", "dst_right"}
+
 
 class TelemetryHandler:
     def __init__(self, state: SharedState):
@@ -13,8 +17,10 @@ class TelemetryHandler:
         self._stop = threading.Event()
         self._last_hb = self._last_ctrl = 0.0
         self._cmd_dispatch = {
-            "arm": lambda a, kw: self._do_arm_disarm(True), "disarm": lambda a, kw: self._do_arm_disarm(False),
-            "set_motion": lambda a, kw: self._do_set_motion(*a, **kw), "stop_motors": lambda a, kw: self._send_neutral(),
+            "arm": lambda a, kw: self._do_arm_disarm(True),
+            "disarm": lambda a, kw: self._do_arm_disarm(False),
+            "set_motion": lambda a, kw: self._do_set_motion(*a, **kw),
+            "stop_motors": lambda a, kw: self._send_neutral(),
             "set_mode": lambda a, kw: self._do_set_mode(*a),
         }
 
@@ -35,9 +41,12 @@ class TelemetryHandler:
 
     def _run(self):
         if not self._connect(): return
-        dispatch = {'HEARTBEAT': self._on_heartbeat, 'SYS_STATUS': self._on_sys_status, 'VFR_HUD': self._on_vfr_hud,
-                    'ATTITUDE': self._on_attitude, 'SCALED_PRESSURE': self._on_pressure, 'SERVO_OUTPUT_RAW': self._on_servo,
-                    'NAMED_VALUE_FLOAT': self._on_named_value}
+        dispatch = {
+            'HEARTBEAT': self._on_heartbeat, 'SYS_STATUS': self._on_sys_status,
+            'VFR_HUD': self._on_vfr_hud, 'ATTITUDE': self._on_attitude,
+            'SCALED_PRESSURE': self._on_pressure, 'SERVO_OUTPUT_RAW': self._on_servo,
+            'NAMED_VALUE_FLOAT': self._on_named_value
+        }
         while not self._stop.is_set():
             now = time.time()
             if now - self._last_hb >= 1.0: self._send_heartbeat(); self._last_hb = now
@@ -85,25 +94,34 @@ class TelemetryHandler:
         self._state.update_raw_telemetry(roll=r, pitch=p, yaw=y)
         self._state.put_telemetry_update("ROLL", f"{r:+.1f}"); self._state.put_telemetry_update("PITCH", f"{p:+.1f}")
 
-    def _on_pressure(self, msg): self._state.update_raw_telemetry(pressure=msg.press_abs, temp=msg.temperature / 100.0)
+    def _on_pressure(self, msg):
+        self._state.update_raw_telemetry(pressure=msg.press_abs, temp=msg.temperature / 100.0)
 
     def _on_servo(self, msg):
         servos = [getattr(msg, f'servo{i}_raw', 1500) for i in range(1, THRUSTER_COUNT + 1)]
         self._state.update_raw_telemetry(servo=servos)
         self._state.put_telemetry_update("THRUSTERS", [max(-1.0, min(1.0, (pwm - 1500) / 400.0)) for pwm in servos])
 
-    def _on_named_value(self, msg): self._state.put_telemetry_update(f"SENSOR_{msg.name.strip(chr(0)).strip()}", f"{msg.value:.3f}")
+    def _on_named_value(self, msg):
+        self._state.put_telemetry_update(f"SENSOR_{msg.name.strip(chr(0)).strip()}", f"{msg.value:.3f}")
 
     def _do_set_motion(self, forward=0.0, lateral=0.0, throttle=0.0, yaw=0.0):
         if self.mav and self.running:
-            self.mav.mav.manual_control_send(self.mav.target_system, max(-1000, min(1000, int(forward * 1000))),
-                                             max(-1000, min(1000, int(lateral * 1000))), max(0, min(1000, int(500 + throttle * 500))),
-                                             max(-1000, min(1000, int(yaw * 1000))), 0)
+            self.mav.mav.manual_control_send(
+                self.mav.target_system,
+                max(-1000, min(1000, int(forward * 1000))),
+                max(-1000, min(1000, int(lateral * 1000))),
+                max(0, min(1000, int(500 + throttle * 500))),
+                max(-1000, min(1000, int(yaw * 1000))), 0
+            )
 
     def _do_arm_disarm(self, arm: bool):
         if self.mav:
-            self.mav.mav.command_long_send(self.mav.target_system, self.mav.target_component,
-                                           mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0, int(arm), 21196, 0, 0, 0, 0, 0)
+            self.mav.mav.command_long_send(
+                self.mav.target_system, self.mav.target_component,
+                mavutil.mavlink.MAV_CMD_COMPONENT_ARM_DISARM, 0,
+                int(arm), 21196, 0, 0, 0, 0, 0
+            )
             if not arm: self._send_neutral()
 
     def _do_set_mode(self, mode_name: str):
@@ -111,21 +129,32 @@ class TelemetryHandler:
             self.mav.mav.set_mode_send(self.mav.target_system, mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED, mode_id)
 
     def _send_neutral(self):
-        if self.mav and self.running: self.mav.mav.manual_control_send(self.mav.target_system, 0, 0, 500, 0, 0)
+        if self.mav and self.running:
+            self.mav.mav.manual_control_send(self.mav.target_system, 0, 0, 500, 0, 0)
+
     def _send_heartbeat(self):
-        if self.mav: self.mav.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+        if self.mav:
+            self.mav.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
 
 
 # ═══════════════════════════════════════════════════════════
-#  NEW: Sensor Listener Thread (dedicated port 14553)
+#  Sensor + Motor Status Listener (UDP:14553)
 # ═══════════════════════════════════════════════════════════
 
 class SensorListenerThread(threading.Thread):
     """
-    Dedicated listener for sensor data on UDP:14553.
+    Dedicated listener for sensor data + motor status on UDP:14553.
     Independent of Pixhawk telemetry stream on 14551.
-    Writes sensor readings into SharedState for GUI display.
+    Handles: dst_front, dst_left, dst_right, dst_back, mot_a, mot_b
     """
+
+    # Map sensor name → GUI telemetry card key
+    SENSOR_CARD_MAP = {
+        "dst_front": "FRONT_DIST",
+        "dst_left":  "LEFT_DIST",
+        "dst_right": "RIGHT_DIST",
+        "dst_back":  "BACK_DIST",
+    }
 
     def __init__(self, shared_state: SharedState):
         super().__init__(daemon=True, name="SensorListener")
@@ -146,7 +175,7 @@ class SensorListenerThread(threading.Thread):
             self._state.log(f"[SENSORS] ❌ Cannot bind port {SENSOR_PORT}: {e}")
             return
 
-        self._state.log("[SENSORS] ✅ Listening for sensor data")
+        self._state.log("[SENSORS] ✅ Listening for sensor data + motor status")
 
         while not self._stop_event.is_set():
             try:
@@ -160,30 +189,31 @@ class SensorListenerThread(threading.Thread):
                     name = name.decode("utf-8", errors="replace").rstrip("\x00")
                 name = name.strip()
 
-                if name not in SENSOR_NAMES:
-                    continue
-
                 value = msg.value
 
-                # Store in SharedState
-                self._state.update_sensor(name, value)
+                # ── Sensor data (4 sensors) ──
+                if name in SENSOR_NAMES:
+                    self._state.update_sensor(name, value)
 
-                # Colour code by proximity
-                color = self._proximity_color(value)
+                    color = self._proximity_color(value)
+                    display = f"{int(value)}" if value > 0 else "—"
+                    if value <= 0:
+                        color = "#666666"
 
-                # Format for display
-                display = f"{int(value)}" if value > 0 else "—"
-                if value <= 0:
-                    color = "#666666"
+                    card_key = self.SENSOR_CARD_MAP.get(name, name)
+                    self._state.put_telemetry_update(card_key, display, color)
 
-                # Map to GUI card key
-                card_key = {
-                    "dst_front": "FRONT_DIST",
-                    "dst_left":  "LEFT_DIST",
-                    "dst_right": "RIGHT_DIST",
-                }.get(name, name)
+                # ── Motor status feedback ──
+                elif name in MOTOR_STATUS_NAMES:
+                    is_on = value > 0.5
+                    self._state.update_motor_state(name, is_on)
 
-                self._state.put_telemetry_update(card_key, display, color)
+                    status_text = "ON" if is_on else "OFF"
+                    status_color = "#00E676" if is_on else "#666666"
+
+                    # Send to GUI as telemetry update
+                    card_key = f"MOT_{name[-1].upper()}_STATUS"  # mot_a → MOT_A_STATUS
+                    self._state.put_telemetry_update(card_key, status_text, status_color)
 
             except Exception as e:
                 if not self._stop_event.is_set():
@@ -198,3 +228,77 @@ class SensorListenerThread(threading.Thread):
         elif dist_cm < 50: return "#FFA500"
         elif dist_cm < 100: return "#FFFF44"
         else:              return "#44FF44"
+
+
+# ═══════════════════════════════════════════════════════════
+#  Motor Command Sender Thread (UDP:14554 → Pi → Arduino)
+# ═══════════════════════════════════════════════════════════
+
+class MotorCommandThread(threading.Thread):
+    """
+    Sends DC motor commands from topside to Pi on UDP:14554.
+    Polls SharedState motor command queue and sends NAMED_VALUE_FLOAT.
+    """
+
+    def __init__(self, shared_state: SharedState):
+        super().__init__(daemon=True, name="MotorCommandSender")
+        self._state = shared_state
+        self._stop_event = threading.Event()
+        self._conn = None
+
+    def stop(self):
+        self._stop_event.set()
+
+    def run(self):
+        self._state.log(f"[MOTORS] Starting command sender → {PI_IP}:{MOTOR_CMD_PORT}")
+        try:
+            self._conn = mavutil.mavlink_connection(
+                f"udpout:{PI_IP}:{MOTOR_CMD_PORT}",
+                source_system=255, source_component=0
+            )
+        except Exception as e:
+            self._state.log(f"[MOTORS] ❌ Cannot create UDP connection: {e}")
+            return
+
+        self._state.log("[MOTORS] ✅ Motor command channel ready")
+
+        while not self._stop_event.is_set():
+            try:
+                cmd = self._state.poll_motor_command(timeout=0.2)
+                if cmd is None:
+                    continue
+
+                motor_name, turn_on = cmd
+                value = MOTOR_ON_VALUE if turn_on else MOTOR_OFF_VALUE
+
+                # Send as NAMED_VALUE_FLOAT
+                # name field is max 10 chars, padded with nulls
+                name_bytes = motor_name.encode('utf-8')[:10].ljust(10, b'\x00')
+
+                self._conn.mav.named_value_float_send(
+                    int(time.time() * 1000) & 0xFFFFFFFF,  # time_boot_ms
+                    name_bytes,
+                    value
+                )
+
+                action = "ON" if turn_on else "OFF"
+                self._state.log(f"[MOTORS] Sent: {motor_name} → {action}")
+
+            except Exception as e:
+                if not self._stop_event.is_set():
+                    self._state.log(f"[MOTORS] Send error: {e}")
+
+        # Safety: kill all motors on shutdown
+        try:
+            if self._conn:
+                name_bytes = b'mot_all\x00\x00\x00'
+                self._conn.mav.named_value_float_send(
+                    int(time.time() * 1000) & 0xFFFFFFFF,
+                    name_bytes,
+                    MOTOR_OFF_VALUE
+                )
+                self._state.log("[MOTORS] Shutdown: MOT_ALL_OFF sent")
+        except Exception:
+            pass
+
+        self._state.log("[MOTORS] Command sender stopped")
