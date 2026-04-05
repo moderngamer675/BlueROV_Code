@@ -1,133 +1,119 @@
 """
-gamepad_test.py — Xbox 360 controller axis/button identification tool.
-Run this FIRST to verify your controller mapping before using with ROV.
+motor_test.py — Test motor commands from topside to Arduino via Pi
+Sends NAMED_VALUE_FLOAT messages on port 14554 to the Pi's sensor_bridge.py
+which forwards them as serial commands to the Arduino.
 
-Displays live values for all axes, buttons, and hats.
-Press Ctrl+C to exit.
+Also listens on port 14553 for motor status feedback and 4-sensor data.
+
+Usage: python rov_tests/motor_test.py
 """
 
-import pygame
+from pymavlink import mavutil
 import time
-import os
+import threading
 
-def main():
-    # Must init display subsystem for event.pump() to work
-    # We use a tiny hidden window — no visible pygame window needed
-    os.environ['SDL_VIDEO_WINDOW_POS'] = '-1000,-1000'  # off-screen
-    pygame.init()
-    pygame.display.set_mode((1, 1))  # minimal hidden window
+# ── Send connection (topside → Pi port 14554) ──
+print("Connecting to Pi motor command port...")
+mav_send = mavutil.mavlink_connection(
+    "udpout:192.168.2.2:14554",
+    source_system=255,
+    source_component=0
+)
 
-    print("=" * 60)
-    print("XBOX 360 CONTROLLER TEST")
-    print("=" * 60)
-    print(f"Controllers found: {pygame.joystick.get_count()}")
+# ── Receive connection (Pi port 14553 → topside) for feedback ──
+print("Listening for sensor data + motor feedback on port 14553...")
+mav_recv = mavutil.mavlink_connection(
+    "udp:0.0.0.0:14553",
+    source_system=255,
+    source_component=0
+)
 
-    if pygame.joystick.get_count() == 0:
-        print("\n❌ No controller detected!")
-        print("   1. Plug in Xbox 360 controller")
-        print("   2. Wait for Windows to install drivers")
-        print("   3. Run this script again")
-        pygame.quit()
-        return
+def feedback_listener():
+    """Background thread: print sensor data and motor status from Pi"""
+    while True:
+        try:
+            msg = mav_recv.recv_match(type="NAMED_VALUE_FLOAT", blocking=True, timeout=2.0)
+            if msg is None:
+                continue
+            name = msg.name
+            if isinstance(name, bytes):
+                name = name.decode("utf-8", errors="replace")
+            name = name.rstrip("\x00").strip()
+            value = msg.value
 
-    js = pygame.joystick.Joystick(0)
-    js.init()
+            if name.startswith("mot_"):
+                state = "ON" if value >= 1.0 else "OFF"
+                print(f"  ← FEEDBACK: {name} = {state}")
+            # Sensor data is silent here to avoid flooding — uncomment below to see it:
+            # elif name.startswith("dst_"):
+            #     print(f"  ← SENSOR: {name} = {int(value)}cm")
+        except:
+            pass
 
-    print(f"\nController: {js.get_name()}")
-    print(f"Axes: {js.get_numaxes()}")
-    print(f"Buttons: {js.get_numbuttons()}")
-    print(f"Hats: {js.get_numhats()}")
-    print()
-    print("Move sticks, press buttons, and press triggers.")
-    print("Note which axis/button numbers correspond to each input.")
-    print("Press Ctrl+C to exit.")
-    print()
-    time.sleep(2)  # give user time to read before screen clears
+# Start feedback listener
+t = threading.Thread(target=feedback_listener, daemon=True)
+t.start()
 
-    try:
-        while True:
-            pygame.event.pump()
+def send_motor_command(name, value):
+    """Send a motor command as NAMED_VALUE_FLOAT"""
+    time_boot_ms = int(time.time() * 1000) & 0xFFFFFFFF
+    mav_send.mav.named_value_float_send(
+        time_boot_ms,
+        name.encode("utf-8"),
+        float(value)
+    )
+    state = "ON" if value == 1.0 else "OFF"
+    print(f"  → Sent: {name} = {value} ({state})")
 
-            # Clear screen (Windows)
-            os.system('cls' if os.name == 'nt' else 'clear')
+print("\n" + "=" * 50)
+print("  DC MOTOR REMOTE TEST (with 4-sensor feedback)")
+print("=" * 50)
+print("  1 = Motor A ON        2 = Motor A OFF")
+print("  3 = Motor B ON        4 = Motor B OFF")
+print("  5 = Both ON           6 = Both OFF")
+print("  s = Show sensors (one snapshot)")
+print("  q = Quit (turns both off first)")
+print("=" * 50 + "\n")
 
-            print(f"Controller: {js.get_name()}")
-            print(f"Axes: {js.get_numaxes()} | Buttons: {js.get_numbuttons()} | Hats: {js.get_numhats()}")
-            print(f"{'=' * 60}")
+try:
+    while True:
+        choice = input("Command (1-6, s, q): ").strip().lower()
+        
+        if choice == "1":
+            send_motor_command("mot_a", 1.0)
+        elif choice == "2":
+            send_motor_command("mot_a", 0.0)
+        elif choice == "3":
+            send_motor_command("mot_b", 1.0)
+        elif choice == "4":
+            send_motor_command("mot_b", 0.0)
+        elif choice == "5":
+            send_motor_command("mot_all", 1.0)
+        elif choice == "6":
+            send_motor_command("mot_all", 0.0)
+        elif choice == "s":
+            print("  Listening for sensor snapshot (2 seconds)...")
+            end = time.time() + 2
+            while time.time() < end:
+                msg = mav_recv.recv_match(type="NAMED_VALUE_FLOAT", blocking=True, timeout=0.5)
+                if msg:
+                    name = msg.name
+                    if isinstance(name, bytes):
+                        name = name.decode("utf-8", errors="replace")
+                    name = name.rstrip("\x00").strip()
+                    if name.startswith("dst_"):
+                        print(f"    {name}: {int(msg.value)}cm")
+        elif choice == "q":
+            print("Shutting down — turning off both motors...")
+            send_motor_command("mot_all", 0.0)
+            time.sleep(0.5)
+            break
+        else:
+            print("  Invalid. Use 1-6, s, or q.")
 
-            # Axes
-            print("\nAXES:")
-            for i in range(js.get_numaxes()):
-                value = js.get_axis(i)
-                # Build visual bar
-                bar_width = 20
-                bar_pos = int((value + 1.0) / 2.0 * bar_width)
-                bar_pos = max(0, min(bar_width, bar_pos))
-                bar = "░" * bar_pos + "█" + "░" * (bar_width - bar_pos)
-                
-                # Highlight if significantly deflected
-                if abs(value) > 0.15:
-                    marker = " ◄◄◄ ACTIVE"
-                else:
-                    marker = ""
-                    
-                print(f"  Axis {i}: {value:+.3f}  [{bar}]{marker}")
+except KeyboardInterrupt:
+    print("\nCtrl+C — turning off both motors...")
+    send_motor_command("mot_all", 0.0)
+    time.sleep(0.5)
 
-            # Buttons
-            print("\nBUTTONS:")
-            btn_line = "  "
-            for i in range(js.get_numbuttons()):
-                state = js.get_button(i)
-                if state:
-                    btn_line += f"[{i}:■] "  # pressed
-                else:
-                    btn_line += f"[{i}:□] "  # released
-                if (i + 1) % 6 == 0:
-                    print(btn_line)
-                    btn_line = "  "
-            if btn_line.strip():
-                print(btn_line)
-
-            # Hats
-            print("\nHATS (D-PAD):")
-            for i in range(js.get_numhats()):
-                hat = js.get_hat(i)
-                hx, hy = hat
-                direction = ""
-                if hy == 1:  direction += "UP "
-                if hy == -1: direction += "DOWN "
-                if hx == -1: direction += "LEFT "
-                if hx == 1:  direction += "RIGHT "
-                if not direction: direction = "CENTER"
-                print(f"  Hat {i}: ({hx:+d}, {hy:+d})  →  {direction}")
-
-            print(f"\n{'=' * 60}")
-            print("IDENTIFICATION GUIDE:")
-            print("  1. Push LEFT stick UP      → which axis goes NEGATIVE?  = LEFT_Y")
-            print("  2. Push LEFT stick RIGHT   → which axis goes POSITIVE?  = LEFT_X")
-            print("  3. Push RIGHT stick RIGHT  → which axis goes POSITIVE?  = RIGHT_X")
-            print("  4. Push RIGHT stick UP     → which axis goes NEGATIVE?  = RIGHT_Y")
-            print("  5. Pull LEFT trigger (LT)  → which axis changes?        = LT")
-            print("  6. Pull RIGHT trigger (RT) → which axis changes?        = RT")
-            print()
-            print("  7. Press A → note button number")
-            print("  8. Press B → note button number")
-            print("  9. Press X → note button number")
-            print(" 10. Press Y → note button number")
-            print(" 11. Press LB → note button number")
-            print(" 12. Press RB → note button number")
-            print(" 13. Press BACK → note button number")
-            print(" 14. Press START → note button number")
-            print()
-            print("Press Ctrl+C when done")
-
-            time.sleep(0.05)
-
-    except KeyboardInterrupt:
-        print("\n\nDone!")
-        js.quit()
-        pygame.quit()
-
-
-if __name__ == "__main__":
-    main()
+print("Done.")
