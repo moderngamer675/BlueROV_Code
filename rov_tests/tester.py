@@ -1,125 +1,133 @@
-#!/usr/bin/env python3
 """
-sensor_listen_test.py — Run on TOPSIDE (Windows, VS Code)
-Listens directly for ultrasonic sensor data on port 14553.
-Displays a clean, updating dashboard until Ctrl+C is pressed.
+gamepad_test.py — Xbox 360 controller axis/button identification tool.
+Run this FIRST to verify your controller mapping before using with ROV.
 
-Usage:
-  python rov_tests/sensor_listen_test.py
+Displays live values for all axes, buttons, and hats.
+Press Ctrl+C to exit.
 """
 
-from pymavlink import mavutil
+import pygame
 import time
 import os
 
-SENSOR_PORT = "udp:0.0.0.0:14553"
-
-# Proximity thresholds (cm)
-DANGER  = 30
-CAUTION = 100
-
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-def proximity_bar(value, max_cm=300, bar_width=30):
-    """Create a visual bar showing distance."""
-    if value == 0:
-        return "[" + "?" * bar_width + "]  NO ECHO"
-    fill = min(int((value / max_cm) * bar_width), bar_width)
-    empty = bar_width - fill
-    if value < DANGER:
-        symbol = "!"
-        status = "DANGER"
-    elif value < CAUTION:
-        symbol = "#"
-        status = "CAUTION"
-    else:
-        symbol = "="
-        status = "CLEAR"
-    return f"[{symbol * fill}{'.' * empty}]  {status}"
-
 def main():
-    clear_screen()
-    print("=" * 56)
-    print("   ROV ULTRASONIC SENSOR MONITOR")
-    print("=" * 56)
-    print(f"   Port: {SENSOR_PORT}")
-    print("   Press Ctrl+C to stop")
-    print("-" * 56)
-    print("   Waiting for sensor data...\n")
+    # Must init display subsystem for event.pump() to work
+    # We use a tiny hidden window — no visible pygame window needed
+    os.environ['SDL_VIDEO_WINDOW_POS'] = '-1000,-1000'  # off-screen
+    pygame.init()
+    pygame.display.set_mode((1, 1))  # minimal hidden window
 
-    mav = mavutil.mavlink_connection(SENSOR_PORT, source_system=255)
+    print("=" * 60)
+    print("XBOX 360 CONTROLLER TEST")
+    print("=" * 60)
+    print(f"Controllers found: {pygame.joystick.get_count()}")
 
-    latest = {"dst_front": None, "dst_left": None, "dst_right": None}
-    labels = {"dst_front": "FRONT", "dst_left": " LEFT", "dst_right": "RIGHT"}
-    count = 0
-    cycles = 0
-    start = time.time()
+    if pygame.joystick.get_count() == 0:
+        print("\n❌ No controller detected!")
+        print("   1. Plug in Xbox 360 controller")
+        print("   2. Wait for Windows to install drivers")
+        print("   3. Run this script again")
+        pygame.quit()
+        return
+
+    js = pygame.joystick.Joystick(0)
+    js.init()
+
+    print(f"\nController: {js.get_name()}")
+    print(f"Axes: {js.get_numaxes()}")
+    print(f"Buttons: {js.get_numbuttons()}")
+    print(f"Hats: {js.get_numhats()}")
+    print()
+    print("Move sticks, press buttons, and press triggers.")
+    print("Note which axis/button numbers correspond to each input.")
+    print("Press Ctrl+C to exit.")
+    print()
+    time.sleep(2)  # give user time to read before screen clears
 
     try:
         while True:
-            msg = mav.recv_match(type='NAMED_VALUE_FLOAT', blocking=True, timeout=0.5)
-            if msg is None:
-                continue
+            pygame.event.pump()
 
-            name = msg.name.strip('\x00')
-            if name not in latest:
-                continue
+            # Clear screen (Windows)
+            os.system('cls' if os.name == 'nt' else 'clear')
 
-            latest[name] = msg.value
-            count += 1
+            print(f"Controller: {js.get_name()}")
+            print(f"Axes: {js.get_numaxes()} | Buttons: {js.get_numbuttons()} | Hats: {js.get_numhats()}")
+            print(f"{'=' * 60}")
 
-            if count % 3 == 0:
-                cycles += 1
-                elapsed = time.time() - start
+            # Axes
+            print("\nAXES:")
+            for i in range(js.get_numaxes()):
+                value = js.get_axis(i)
+                # Build visual bar
+                bar_width = 20
+                bar_pos = int((value + 1.0) / 2.0 * bar_width)
+                bar_pos = max(0, min(bar_width, bar_pos))
+                bar = "░" * bar_pos + "█" + "░" * (bar_width - bar_pos)
+                
+                # Highlight if significantly deflected
+                if abs(value) > 0.15:
+                    marker = " ◄◄◄ ACTIVE"
+                else:
+                    marker = ""
+                    
+                print(f"  Axis {i}: {value:+.3f}  [{bar}]{marker}")
 
-                clear_screen()
-                print("=" * 56)
-                print("   ROV ULTRASONIC SENSOR MONITOR")
-                print("=" * 56)
-                now = time.strftime("%H:%M:%S")
-                print(f"   Cycle: {cycles:<6}  Elapsed: {elapsed:>5.1f}s  Time: {now}")
-                print(f"   Press Ctrl+C to stop")
-                print("-" * 56)
+            # Buttons
+            print("\nBUTTONS:")
+            btn_line = "  "
+            for i in range(js.get_numbuttons()):
+                state = js.get_button(i)
+                if state:
+                    btn_line += f"[{i}:■] "  # pressed
+                else:
+                    btn_line += f"[{i}:□] "  # released
+                if (i + 1) % 6 == 0:
+                    print(btn_line)
+                    btn_line = "  "
+            if btn_line.strip():
+                print(btn_line)
 
-                for key in ["dst_front", "dst_left", "dst_right"]:
-                    val = latest[key]
-                    label = labels[key]
-                    if val is None:
-                        print(f"   {label}:    ---")
-                    else:
-                        bar = proximity_bar(val)
-                        print(f"   {label}:  {val:>6.0f} cm  {bar}")
+            # Hats
+            print("\nHATS (D-PAD):")
+            for i in range(js.get_numhats()):
+                hat = js.get_hat(i)
+                hx, hy = hat
+                direction = ""
+                if hy == 1:  direction += "UP "
+                if hy == -1: direction += "DOWN "
+                if hx == -1: direction += "LEFT "
+                if hx == 1:  direction += "RIGHT "
+                if not direction: direction = "CENTER"
+                print(f"  Hat {i}: ({hx:+d}, {hy:+d})  →  {direction}")
 
-                print("-" * 56)
-                print(f"   Total readings: {count}  ({count/max(elapsed,0.1):.0f}/sec)")
-                print("=" * 56)
+            print(f"\n{'=' * 60}")
+            print("IDENTIFICATION GUIDE:")
+            print("  1. Push LEFT stick UP      → which axis goes NEGATIVE?  = LEFT_Y")
+            print("  2. Push LEFT stick RIGHT   → which axis goes POSITIVE?  = LEFT_X")
+            print("  3. Push RIGHT stick RIGHT  → which axis goes POSITIVE?  = RIGHT_X")
+            print("  4. Push RIGHT stick UP     → which axis goes NEGATIVE?  = RIGHT_Y")
+            print("  5. Pull LEFT trigger (LT)  → which axis changes?        = LT")
+            print("  6. Pull RIGHT trigger (RT) → which axis changes?        = RT")
+            print()
+            print("  7. Press A → note button number")
+            print("  8. Press B → note button number")
+            print("  9. Press X → note button number")
+            print(" 10. Press Y → note button number")
+            print(" 11. Press LB → note button number")
+            print(" 12. Press RB → note button number")
+            print(" 13. Press BACK → note button number")
+            print(" 14. Press START → note button number")
+            print()
+            print("Press Ctrl+C when done")
+
+            time.sleep(0.05)
 
     except KeyboardInterrupt:
-        elapsed = time.time() - start
-        clear_screen()
-        print("=" * 56)
-        print("   ROV ULTRASONIC SENSOR MONITOR — STOPPED")
-        print("=" * 56)
+        print("\n\nDone!")
+        js.quit()
+        pygame.quit()
 
-        if count == 0:
-            print("\n   ⚠️  No ultrasonic sensor data received.\n")
-        else:
-            print(f"\n   Ran for:     {elapsed:.1f}s")
-            print(f"   Readings:    {count} ({count/max(elapsed,0.1):.0f}/sec)")
-            print(f"   Cycles:      {cycles}")
-            print(f"\n   Last readings:")
-            print(f"   {'-' * 48}")
-            for key in ["dst_front", "dst_left", "dst_right"]:
-                val = latest[key]
-                label = labels[key]
-                if val is not None:
-                    bar = proximity_bar(val)
-                    print(f"   {label}:  {val:>6.0f} cm  {bar}")
-            print(f"   {'-' * 48}")
-            print(f"\n   ✅ Sensor pipeline verified.")
-
-        print("=" * 56)
 
 if __name__ == "__main__":
     main()

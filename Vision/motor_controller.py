@@ -58,6 +58,41 @@ class MotionController:
         self.move(*active_directions)
         return True
 
+    # ── NEW: Gamepad analog input ──
+
+    def move_from_gamepad(self, left_x: float, left_y: float, right_x: float,
+                          lt: float = 0.0, rt: float = 0.0) -> bool:
+        """
+        Accept analog stick values (-1.0 to +1.0) and trigger values (0.0 to 1.0).
+        Converts to MANUAL_CONTROL command scaled by current speed profile.
+        Returns True if any input was non-zero.
+        
+        left_y  = forward/backward (positive = forward)
+        left_x  = strafe (positive = right)
+        right_x = yaw (positive = clockwise)
+        rt      = ascend (0-1)
+        lt      = descend (0-1)
+        """
+        has_input = (abs(left_x) > 0.01 or abs(left_y) > 0.01 or
+                     abs(right_x) > 0.01 or lt > 0.01 or rt > 0.01)
+
+        if not has_input:
+            return False
+
+        forward = int(left_y * self._speed)
+        lateral = int(left_x * self._speed)
+        yaw     = int(right_x * self._speed)
+        vertical = 500 + int((rt - lt) * 500)
+
+        axes = {
+            "x": max(-1000, min(1000, forward)),
+            "y": max(-1000, min(1000, lateral)),
+            "z": max(0, min(1000, vertical)),
+            "r": max(-1000, min(1000, yaw)),
+        }
+        self._send(axes)
+        return True
+
     def stop(self): self._send(NEUTRAL)
 
     def _send(self, axes: dict):

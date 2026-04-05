@@ -1,4 +1,4 @@
-import threading, queue, copy
+import threading, queue, time, copy
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -23,6 +23,18 @@ class SharedState:
         self._yolo_loaded, self._yolo_enabled = False, True
         self._logs: deque = deque(maxlen=LOG_QUEUE_MAXLEN)
         self._cmd_queue: queue.Queue = queue.Queue()
+
+        # ── NEW: Sensor data storage ──
+        self._sensor_lock = threading.Lock()
+        self._sensor_data = {"dst_front": 0.0, "dst_left": 0.0, "dst_right": 0.0}
+        self._sensor_timestamps = {"dst_front": 0.0, "dst_left": 0.0, "dst_right": 0.0}
+
+        # ── NEW: Gamepad state ──
+        self._gamepad_lock = threading.Lock()
+        self._gamepad_connected = False
+        self._gamepad_input_active = False
+
+    # ── Existing methods (unchanged) ──
 
     def put_telemetry_update(self, key: str, value: Any, color: Optional[str] = None):
         with self._telem_lock: self._telem_updates.append(TelemetryUpdate(key, value, color))
@@ -64,3 +76,33 @@ class SharedState:
     def poll_command(self) -> Optional[Command]:
         try: return self._cmd_queue.get_nowait()
         except queue.Empty: return None
+
+    # ── NEW: Sensor methods ──
+
+    def update_sensor(self, name: str, value: float):
+        """Called by sensor listener thread when new reading arrives."""
+        with self._sensor_lock:
+            self._sensor_data[name] = value
+            self._sensor_timestamps[name] = time.time()
+
+    def get_sensor_data(self) -> dict:
+        """Returns snapshot of all sensor readings."""
+        with self._sensor_lock:
+            return dict(self._sensor_data)
+
+    def is_sensor_stale(self, name: str, max_age_s: float = 2.0) -> bool:
+        """Check if a sensor reading is too old to trust."""
+        with self._sensor_lock:
+            age = time.time() - self._sensor_timestamps.get(name, 0)
+            return age > max_age_s
+
+    # ── NEW: Gamepad state methods ──
+
+    def set_gamepad_state(self, connected: bool, input_active: bool = False):
+        with self._gamepad_lock:
+            self._gamepad_connected = connected
+            self._gamepad_input_active = input_active
+
+    def get_gamepad_state(self) -> tuple:
+        with self._gamepad_lock:
+            return self._gamepad_connected, self._gamepad_input_active

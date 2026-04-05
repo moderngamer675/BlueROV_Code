@@ -1,10 +1,11 @@
 import threading, time
 from pymavlink import mavutil
-from rov_config import MAV_PORT, SOURCE_SYSTEM, THRUSTER_COUNT
+from rov_config import MAV_PORT, SOURCE_SYSTEM, THRUSTER_COUNT, SENSOR_PORT
 from shared_state import SharedState, Command
 
 RAD2DEG = 57.2958
 BATTERY_THRESHOLDS = [(15.5, "#00E676"), (14.5, "#FFD600"), (13.5, "#FF9100"), (0.0, "#FF3366")]
+SENSOR_NAMES = {"dst_front", "dst_left", "dst_right"}
 
 class TelemetryHandler:
     def __init__(self, state: SharedState):
@@ -113,3 +114,87 @@ class TelemetryHandler:
         if self.mav and self.running: self.mav.mav.manual_control_send(self.mav.target_system, 0, 0, 500, 0, 0)
     def _send_heartbeat(self):
         if self.mav: self.mav.mav.heartbeat_send(mavutil.mavlink.MAV_TYPE_GCS, mavutil.mavlink.MAV_AUTOPILOT_INVALID, 0, 0, 0)
+
+
+# ═══════════════════════════════════════════════════════════
+#  NEW: Sensor Listener Thread (dedicated port 14553)
+# ═══════════════════════════════════════════════════════════
+
+class SensorListenerThread(threading.Thread):
+    """
+    Dedicated listener for sensor data on UDP:14553.
+    Independent of Pixhawk telemetry stream on 14551.
+    Writes sensor readings into SharedState for GUI display.
+    """
+
+    def __init__(self, shared_state: SharedState):
+        super().__init__(daemon=True, name="SensorListener")
+        self._state = shared_state
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def run(self):
+        self._state.log(f"[SENSORS] Starting listener on udp:0.0.0.0:{SENSOR_PORT}")
+        try:
+            conn = mavutil.mavlink_connection(
+                f"udp:0.0.0.0:{SENSOR_PORT}",
+                source_system=255, source_component=0
+            )
+        except Exception as e:
+            self._state.log(f"[SENSORS] ❌ Cannot bind port {SENSOR_PORT}: {e}")
+            return
+
+        self._state.log("[SENSORS] ✅ Listening for sensor data")
+
+        while not self._stop_event.is_set():
+            try:
+                msg = conn.recv_match(type="NAMED_VALUE_FLOAT", blocking=True, timeout=2.0)
+                if msg is None:
+                    continue
+
+                # Parse name field
+                name = msg.name
+                if isinstance(name, bytes):
+                    name = name.decode("utf-8", errors="replace").rstrip("\x00")
+                name = name.strip()
+
+                if name not in SENSOR_NAMES:
+                    continue
+
+                value = msg.value
+
+                # Store in SharedState
+                self._state.update_sensor(name, value)
+
+                # Colour code by proximity
+                color = self._proximity_color(value)
+
+                # Format for display
+                display = f"{int(value)}" if value > 0 else "—"
+                if value <= 0:
+                    color = "#666666"
+
+                # Map to GUI card key
+                card_key = {
+                    "dst_front": "FRONT_DIST",
+                    "dst_left":  "LEFT_DIST",
+                    "dst_right": "RIGHT_DIST",
+                }.get(name, name)
+
+                self._state.put_telemetry_update(card_key, display, color)
+
+            except Exception as e:
+                if not self._stop_event.is_set():
+                    self._state.log(f"[SENSORS] Error: {e}")
+
+        self._state.log("[SENSORS] Listener stopped")
+
+    @staticmethod
+    def _proximity_color(dist_cm):
+        if dist_cm <= 0:   return "#666666"
+        elif dist_cm < 20: return "#FF4444"
+        elif dist_cm < 50: return "#FFA500"
+        elif dist_cm < 100: return "#FFFF44"
+        else:              return "#44FF44"
