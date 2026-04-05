@@ -377,7 +377,9 @@ class RobotApp:
         if not self.video_backend.running: return
         frame, fps = self._state.get_video_frame()
         if frame is not None:
-            self._current_frame = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(cv2.resize(frame, (CAM_W, CAM_H), interpolation=cv2.INTER_LINEAR), cv2.COLOR_BGR2RGB)))
+            # Because the frame is already properly sized and color-converted 
+            # by the backend, we can pass it straight to Tkinter.
+            self._current_frame = ImageTk.PhotoImage(image=Image.fromarray(frame))
             self.video_label.configure(image=self._current_frame, text="")
 
     def _apply_telemetry_update(self, key, value, color_hex=None):
