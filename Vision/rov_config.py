@@ -21,8 +21,8 @@ THRUSTER_COUNT       = 4
 THRUSTER_LABELS      = ["T1", "T2", "T3", "T4"]
 THRUSTER_ROLES       = ["FWD-L", "FWD-R", "VRT-L", "VRT-R"]
 
-YOLO_MODEL      = "yolov8n.pt"
-YOLO_CONFIDENCE = 0.45
+YOLO_MODEL      = r"C:\Users\Shahz\Desktop\VS Code Projects\BlueROV_Code\Vision\best.pt"
+YOLO_CONFIDENCE = 0.5
 YOLO_ENABLED    = True
 
 GUI_POLL_MS      = 16

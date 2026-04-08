@@ -1,119 +1,90 @@
-"""
-motor_test.py — Test motor commands from topside to Arduino via Pi
-Sends NAMED_VALUE_FLOAT messages on port 14554 to the Pi's sensor_bridge.py
-which forwards them as serial commands to the Arduino.
-
-Also listens on port 14553 for motor status feedback and 4-sensor data.
-
-Usage: python rov_tests/motor_test.py
-"""
-
-from pymavlink import mavutil
 import time
-import threading
+import matplotlib.pyplot as plt
+import numpy as np
+from RobotApp import SharedState
+from RobotBackend import RobotLogic
+from autonomous_controller import AutonomousController, AutonomousMode
+from motor_controller import MotionController
 
-# ── Send connection (topside → Pi port 14554) ──
-print("Connecting to Pi motor command port...")
-mav_send = mavutil.mavlink_connection(
-    "udpout:192.168.2.2:14554",
-    source_system=255,
-    source_component=0
-)
+# --- Configuration ---
+TEST_DURATION = 30  # seconds
 
-# ── Receive connection (Pi port 14553 → topside) for feedback ──
-print("Listening for sensor data + motor feedback on port 14553...")
-mav_recv = mavutil.mavlink_connection(
-    "udp:0.0.0.0:14553",
-    source_system=255,
-    source_component=0
-)
+def main():
+    print("=" * 50)
+    print("  DRY-RUN: HARDWARE OBJECT TRACKING VERIFICATION")
+    print("=" * 50)
+    
+    # 1. Initialize the actual system state
+    state = SharedState()
+    motion = MotionController(state)
+    
+    # 2. Initialize actual Camera and YOLO model
+    # This will load the 'yolov8n.pt' model defined in your config [cite: 1357]
+    video = RobotLogic(state)
+    
+    # 3. Initialize Autonomous Controller
+    auto = AutonomousController(state, motion)
+    
+    # --- MOCKING THE TELEMETRY LINK ---
+    # We replace the send_command function so it logs to our test instead of the ROV
+    history_time = []
+    history_yaw = []
+    
+    def mocked_send_command(cmd):
+        if cmd.name == "set_motion":
+            # Extract the yaw value (-1.0 to 1.0) calculated by the controller [cite: 1651]
+            yaw_val = cmd.kwargs.get("yaw", 0.0)
+            history_time.append(time.time() - start_time)
+            history_yaw.append(1500 + (yaw_val * 400)) # Convert to PWM for the graph
+            
+    state.send_command = mocked_send_command
+    # ----------------------------------
 
-def feedback_listener():
-    """Background thread: print sensor data and motor status from Pi"""
-    while True:
-        try:
-            msg = mav_recv.recv_match(type="NAMED_VALUE_FLOAT", blocking=True, timeout=2.0)
-            if msg is None:
-                continue
-            name = msg.name
-            if isinstance(name, bytes):
-                name = name.decode("utf-8", errors="replace")
-            name = name.rstrip("\x00").strip()
-            value = msg.value
+    print("🚀 Starting Camera and YOLO... Please point the camera at a target.")
+    video.start()
+    auto.start()
+    
+    # Set mode to Object Track [cite: 1432]
+    auto.set_mode(AutonomousMode.OBJECT_TRACK)
+    
+    start_time = time.time()
+    try:
+        while time.time() - start_time < TEST_DURATION:
+            # Check if YOLO has found anything
+            dets = state.get_latest_detections()
+            if dets:
+                target = dets[0]
+                print(f"[{time.time()-start_time:05.2f}s] Tracking: {target['label']} "
+                      f"({target['conf']:.2f}) | PWM: {history_yaw[-1] if history_yaw else 1500:.0f}")
+            else:
+                print(f"[{time.time()-start_time:05.2f}s] Searching for targets...")
+            
+            time.sleep(0.1)
+            
+    except KeyboardInterrupt:
+        pass
 
-            if name.startswith("mot_"):
-                state = "ON" if value >= 1.0 else "OFF"
-                print(f"  ← FEEDBACK: {name} = {state}")
-            # Sensor data is silent here to avoid flooding — uncomment below to see it:
-            # elif name.startswith("dst_"):
-            #     print(f"  ← SENSOR: {name} = {int(value)}cm")
-        except:
-            pass
+    print("\n⏹️ Test Complete. Shutting down...")
+    video.stop()
+    auto.stop()
+    
+    generate_hardware_tracking_plot(history_time, history_yaw)
 
-# Start feedback listener
-t = threading.Thread(target=feedback_listener, daemon=True)
-t.start()
+def generate_hardware_tracking_plot(t_data, yaw_data):
+    plt.style.use('seaborn-v0_8-darkgrid')
+    plt.figure(figsize=(10, 6), dpi=120)
+    
+    plt.plot(t_data, yaw_data, color='#00A8FF', linewidth=2, label='Mocked Yaw Output')
+    plt.axhline(1500, color='red', linestyle='--', alpha=0.6, label='Neutral (1500µs)')
+    
+    plt.title('Hardware-in-the-Loop: YOLOv8 Tracking Kinematic Response (Dry-Run)', fontweight='bold')
+    plt.xlabel('Time (seconds)')
+    plt.ylabel('Commanded Yaw PWM (µs)')
+    plt.ylim(1100, 1900)
+    plt.legend()
+    
+    plt.savefig(f"hardware_tracking_test_{int(time.time())}.png")
+    plt.show()
 
-def send_motor_command(name, value):
-    """Send a motor command as NAMED_VALUE_FLOAT"""
-    time_boot_ms = int(time.time() * 1000) & 0xFFFFFFFF
-    mav_send.mav.named_value_float_send(
-        time_boot_ms,
-        name.encode("utf-8"),
-        float(value)
-    )
-    state = "ON" if value == 1.0 else "OFF"
-    print(f"  → Sent: {name} = {value} ({state})")
-
-print("\n" + "=" * 50)
-print("  DC MOTOR REMOTE TEST (with 4-sensor feedback)")
-print("=" * 50)
-print("  1 = Motor A ON        2 = Motor A OFF")
-print("  3 = Motor B ON        4 = Motor B OFF")
-print("  5 = Both ON           6 = Both OFF")
-print("  s = Show sensors (one snapshot)")
-print("  q = Quit (turns both off first)")
-print("=" * 50 + "\n")
-
-try:
-    while True:
-        choice = input("Command (1-6, s, q): ").strip().lower()
-        
-        if choice == "1":
-            send_motor_command("mot_a", 1.0)
-        elif choice == "2":
-            send_motor_command("mot_a", 0.0)
-        elif choice == "3":
-            send_motor_command("mot_b", 1.0)
-        elif choice == "4":
-            send_motor_command("mot_b", 0.0)
-        elif choice == "5":
-            send_motor_command("mot_all", 1.0)
-        elif choice == "6":
-            send_motor_command("mot_all", 0.0)
-        elif choice == "s":
-            print("  Listening for sensor snapshot (2 seconds)...")
-            end = time.time() + 2
-            while time.time() < end:
-                msg = mav_recv.recv_match(type="NAMED_VALUE_FLOAT", blocking=True, timeout=0.5)
-                if msg:
-                    name = msg.name
-                    if isinstance(name, bytes):
-                        name = name.decode("utf-8", errors="replace")
-                    name = name.rstrip("\x00").strip()
-                    if name.startswith("dst_"):
-                        print(f"    {name}: {int(msg.value)}cm")
-        elif choice == "q":
-            print("Shutting down — turning off both motors...")
-            send_motor_command("mot_all", 0.0)
-            time.sleep(0.5)
-            break
-        else:
-            print("  Invalid. Use 1-6, s, or q.")
-
-except KeyboardInterrupt:
-    print("\nCtrl+C — turning off both motors...")
-    send_motor_command("mot_all", 0.0)
-    time.sleep(0.5)
-
-print("Done.")
+if __name__ == "__main__":
+    main()

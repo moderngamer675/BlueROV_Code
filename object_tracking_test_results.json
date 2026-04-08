@@ -1,0 +1,3380 @@
+{
+  "test_metadata": {
+    "test_name": "Object Tracking Logic Verification",
+    "timestamp": "2026-04-08T11:48:35.907752",
+    "control_params": {
+      "frame_width": 1280,
+      "frame_height": 720,
+      "pwm_neutral": 1500.0,
+      "proportional_gain": 200.0,
+      "deadzone_pixels": 20.0
+    },
+    "test_params": {
+      "duration_seconds": 16.0,
+      "num_samples": 480,
+      "sampling_rate_hz": 30.0
+    }
+  },
+  "results": [
+    {
+      "timestamp": 0.0,
+      "target_x_px": 50.24835707650561,
+      "pixel_offset": -589.7516429234944,
+      "pwm_command": 1315.702611586408,
+      "pwm_expected": 1315.702611586408
+    },
+    {
+      "timestamp": 0.03333333333333333,
+      "target_x_px": 52.78217760238368,
+      "pixel_offset": -587.2178223976164,
+      "pwm_command": 1316.4944305007448,
+      "pwm_expected": 1316.4944305007448
+    },
+    {
+      "timestamp": 0.06666666666666667,
+      "target_x_px": 54.799589979305,
+      "pixel_offset": -585.200410020695,
+      "pwm_command": 1317.1248718685329,
+      "pwm_expected": 1317.1248718685329
+    },
+    {
+      "timestamp": 0.1,
+      "target_x_px": 58.164606407753695,
+      "pixel_offset": -581.8353935922463,
+      "pwm_command": 1318.176439502423,
+      "pwm_expected": 1318.176439502423
+    },
+    {
+      "timestamp": 0.13333333333333333,
+      "target_x_px": 59.598596140365856,
+      "pixel_offset": -580.4014038596341,
+      "pwm_command": 1318.6245612938644,
+      "pwm_expected": 1318.6245612938644
+    },
+    {
+      "timestamp": 0.16666666666666666,
+      "target_x_px": 62.059957820260436,
+      "pixel_offset": -577.9400421797395,
+      "pwm_command": 1319.3937368188315,
+      "pwm_expected": 1319.3937368188315
+    },
+    {
+      "timestamp": 0.2,
+      "target_x_px": 64.87098113578301,
+      "pixel_offset": -575.129018864217,
+      "pwm_command": 1320.2721816049323,
+      "pwm_expected": 1320.2721816049323
+    },
+    {
+      "timestamp": 0.23333333333333334,
+      "target_x_px": 66.34587441707681,
+      "pixel_offset": -573.6541255829231,
+      "pwm_command": 1320.7330857553366,
+      "pwm_expected": 1320.7330857553366
+    },
+    {
+      "timestamp": 0.26666666666666666,
+      "target_x_px": 69.16025110649946,
+      "pixel_offset": -570.8397488935005,
+      "pwm_command": 1321.612578470781,
+      "pwm_expected": 1321.612578470781
+    },
+    {
+      "timestamp": 0.3,
+      "target_x_px": 71.6709879622394,
+      "pixel_offset": -568.3290120377605,
+      "pwm_command": 1322.3971837381998,
+      "pwm_expected": 1322.3971837381998
+    },
+    {
+      "timestamp": 0.3333333333333333,
+      "target_x_px": 75.31615771779411,
+      "pixel_offset": -564.6838422822059,
+      "pwm_command": 1323.5362992868106,
+      "pwm_expected": 1323.5362992868106
+    },
+    {
+      "timestamp": 0.36666666666666664,
+      "target_x_px": 77.07543076901062,
+      "pixel_offset": -562.9245692309894,
+      "pwm_command": 1324.0860721153158,
+      "pwm_expected": 1324.0860721153158
+    },
+    {
+      "timestamp": 0.4,
+      "target_x_px": 79.22780863773741,
+      "pixel_offset": -560.7721913622626,
+      "pwm_command": 1324.758690199293,
+      "pwm_expected": 1324.758690199293
+    },
+    {
+      "timestamp": 0.43333333333333335,
+      "target_x_px": 81.3828365446222,
+      "pixel_offset": -558.6171634553777,
+      "pwm_command": 1325.4321364201944,
+      "pwm_expected": 1325.4321364201944
+    },
+    {
+      "timestamp": 0.4666666666666667,
+      "target_x_px": 84.11634732170725,
+      "pixel_offset": -555.8836526782927,
+      "pwm_command": 1326.2863585380335,
+      "pwm_expected": 1326.2863585380335
+    },
+    {
+      "timestamp": 0.5,
+      "target_x_px": 86.5741466938853,
+      "pixel_offset": -553.4258533061147,
+      "pwm_command": 1327.0544208418391,
+      "pwm_expected": 1327.0544208418391
+    },
+    {
+      "timestamp": 0.5333333333333333,
+      "target_x_px": 89.32658472096438,
+      "pixel_offset": -550.6734152790357,
+      "pwm_command": 1327.9145577253014,
+      "pwm_expected": 1327.9145577253014
+    },
+    {
+      "timestamp": 0.5666666666666667,
+      "target_x_px": 92.20293912271825,
+      "pixel_offset": -547.7970608772818,
+      "pwm_command": 1328.8134184758494,
+      "pwm_expected": 1328.8134184758494
+    },
+    {
+      "timestamp": 0.6,
+      "target_x_px": 94.35443179750237,
+      "pixel_offset": -545.6455682024977,
+      "pwm_command": 1329.4857599367194,
+      "pwm_expected": 1329.4857599367194
+    },
+    {
+      "timestamp": 0.6333333333333333,
+      "target_x_px": 96.04424030888411,
+      "pixel_offset": -543.9557596911159,
+      "pwm_command": 1330.0138250965263,
+      "pwm_expected": 1330.0138250965263
+    },
+    {
+      "timestamp": 0.6666666666666666,
+      "target_x_px": 99.53589995666437,
+      "pixel_offset": -540.4641000433356,
+      "pwm_command": 1331.1049687364575,
+      "pwm_expected": 1331.1049687364575
+    },
+    {
+      "timestamp": 0.7,
+      "target_x_px": 101.56717585880588,
+      "pixel_offset": -538.4328241411941,
+      "pwm_command": 1331.739742455877,
+      "pwm_expected": 1331.739742455877
+    },
+    {
+      "timestamp": 0.7333333333333333,
+      "target_x_px": 103.34407233814962,
+      "pixel_offset": -536.6559276618503,
+      "pwm_command": 1332.2950226056719,
+      "pwm_expected": 1332.2950226056719
+    },
+    {
+      "timestamp": 0.7666666666666666,
+      "target_x_px": 106.31134728118677,
+      "pixel_offset": -533.6886527188133,
+      "pwm_command": 1333.222296025371,
+      "pwm_expected": 1333.222296025371
+    },
+    {
+      "timestamp": 0.8,
+      "target_x_px": 109.17180914478423,
+      "pixel_offset": -530.8281908552158,
+      "pwm_command": 1334.1161903577452,
+      "pwm_expected": 1334.1161903577452
+    },
+    {
+      "timestamp": 0.8333333333333334,
+      "target_x_px": 111.62037531803074,
+      "pixel_offset": -528.3796246819693,
+      "pwm_command": 1334.8813672868846,
+      "pwm_expected": 1334.8813672868846
+    },
+    {
+      "timestamp": 0.8666666666666667,
+      "target_x_px": 113.5782056665137,
+      "pixel_offset": -526.4217943334863,
+      "pwm_command": 1335.4931892707855,
+      "pwm_expected": 1335.4931892707855
+    },
+    {
+      "timestamp": 0.9,
+      "target_x_px": 116.89049976124798,
+      "pixel_offset": -523.109500238752,
+      "pwm_command": 1336.52828117539,
+      "pwm_expected": 1336.52828117539
+    },
+    {
+      "timestamp": 0.9333333333333333,
+      "target_x_px": 118.41372457172201,
+      "pixel_offset": -521.586275428278,
+      "pwm_command": 1337.004288928663,
+      "pwm_expected": 1337.004288928663
+    },
+    {
+      "timestamp": 0.9666666666666667,
+      "target_x_px": 121.45729838236845,
+      "pixel_offset": -518.5427016176316,
+      "pwm_command": 1337.9554057444902,
+      "pwm_expected": 1337.9554057444902
+    },
+    {
+      "timestamp": 1.0,
+      "target_x_px": 123.51041288107736,
+      "pixel_offset": -516.4895871189226,
+      "pwm_command": 1338.5970040253367,
+      "pwm_expected": 1338.5970040253367
+    },
+    {
+      "timestamp": 1.0333333333333332,
+      "target_x_px": 125.65516584633032,
+      "pixel_offset": -514.3448341536697,
+      "pwm_command": 1339.2672393269781,
+      "pwm_expected": 1339.2672393269781
+    },
+    {
+      "timestamp": 1.0666666666666667,
+      "target_x_px": 129.0729295778638,
+      "pixel_offset": -510.92707042213624,
+      "pwm_command": 1340.3352904930825,
+      "pwm_expected": 1340.3352904930825
+    },
+    {
+      "timestamp": 1.1,
+      "target_x_px": 131.08899493920984,
+      "pixel_offset": -508.91100506079016,
+      "pwm_command": 1340.965310918503,
+      "pwm_expected": 1340.965310918503
+    },
+    {
+      "timestamp": 1.1333333333333333,
+      "target_x_px": 133.76415134585713,
+      "pixel_offset": -506.23584865414284,
+      "pwm_command": 1341.8012972955803,
+      "pwm_expected": 1341.8012972955803
+    },
+    {
+      "timestamp": 1.1666666666666667,
+      "target_x_px": 136.22236446942088,
+      "pixel_offset": -503.7776355305791,
+      "pwm_command": 1342.569488896694,
+      "pwm_expected": 1342.569488896694
+    },
+    {
+      "timestamp": 1.2,
+      "target_x_px": 138.48208698044502,
+      "pixel_offset": -501.51791301955495,
+      "pwm_command": 1343.275652181389,
+      "pwm_expected": 1343.275652181389
+    },
+    {
+      "timestamp": 1.2333333333333334,
+      "target_x_px": 139.64846078128846,
+      "pixel_offset": -500.35153921871154,
+      "pwm_command": 1343.6401439941526,
+      "pwm_expected": 1343.6401439941526
+    },
+    {
+      "timestamp": 1.2666666666666666,
+      "target_x_px": 143.46019020078575,
+      "pixel_offset": -496.53980979921425,
+      "pwm_command": 1344.8313094377456,
+      "pwm_expected": 1344.8313094377456
+    },
+    {
+      "timestamp": 1.3,
+      "target_x_px": 145.92088038826776,
+      "pixel_offset": -494.07911961173227,
+      "pwm_command": 1345.6002751213337,
+      "pwm_expected": 1345.6002751213337
+    },
+    {
+      "timestamp": 1.3333333333333333,
+      "target_x_px": 148.22349738941455,
+      "pixel_offset": -491.77650261058545,
+      "pwm_command": 1346.3198429341921,
+      "pwm_expected": 1346.3198429341921
+    },
+    {
+      "timestamp": 1.3666666666666667,
+      "target_x_px": 151.53061368903744,
+      "pixel_offset": -488.4693863109626,
+      "pwm_command": 1347.3533167778241,
+      "pwm_expected": 1347.3533167778241
+    },
+    {
+      "timestamp": 1.4,
+      "target_x_px": 152.8457531985534,
+      "pixel_offset": -487.15424680144656,
+      "pwm_command": 1347.764297874548,
+      "pwm_expected": 1347.764297874548
+    },
+    {
+      "timestamp": 1.4333333333333333,
+      "target_x_px": 156.16603439218434,
+      "pixel_offset": -483.8339656078157,
+      "pwm_command": 1348.8018857475577,
+      "pwm_expected": 1348.8018857475577
+    },
+    {
+      "timestamp": 1.4666666666666666,
+      "target_x_px": 157.90178656478315,
+      "pixel_offset": -482.09821343521685,
+      "pwm_command": 1349.3443083014947,
+      "pwm_expected": 1349.3443083014947
+    },
+    {
+      "timestamp": 1.5,
+      "target_x_px": 160.67353877467403,
+      "pixel_offset": -479.32646122532594,
+      "pwm_command": 1350.2104808670856,
+      "pwm_expected": 1350.2104808670856
+    },
+    {
+      "timestamp": 1.5333333333333332,
+      "target_x_px": 162.73230678639464,
+      "pixel_offset": -477.26769321360536,
+      "pwm_command": 1350.8538458707483,
+      "pwm_expected": 1350.8538458707483
+    },
+    {
+      "timestamp": 1.5666666666666667,
+      "target_x_px": 165.34561259010061,
+      "pixel_offset": -474.6543874098994,
+      "pwm_command": 1351.6705039344065,
+      "pwm_expected": 1351.6705039344065
+    },
+    {
+      "timestamp": 1.6,
+      "target_x_px": 168.1480601385323,
+      "pixel_offset": -471.8519398614677,
+      "pwm_command": 1352.5462687932913,
+      "pwm_expected": 1352.5462687932913
+    },
+    {
+      "timestamp": 1.6333333333333333,
+      "target_x_px": 170.46089006165454,
+      "pixel_offset": -469.53910993834546,
+      "pwm_command": 1353.269028144267,
+      "pwm_expected": 1353.269028144267
+    },
+    {
+      "timestamp": 1.6666666666666667,
+      "target_x_px": 172.20898129564148,
+      "pixel_offset": -467.7910187043585,
+      "pwm_command": 1353.815306654888,
+      "pwm_expected": 1353.815306654888
+    },
+    {
+      "timestamp": 1.7,
+      "target_x_px": 175.20364274173662,
+      "pixel_offset": -464.79635725826336,
+      "pwm_command": 1354.7511383567926,
+      "pwm_expected": 1354.7511383567926
+    },
+    {
+      "timestamp": 1.7333333333333334,
+      "target_x_px": 177.75269047750035,
+      "pixel_offset": -462.2473095224997,
+      "pwm_command": 1355.547715774219,
+      "pwm_expected": 1355.547715774219
+    },
+    {
+      "timestamp": 1.7666666666666666,
+      "target_x_px": 181.23475961727192,
+      "pixel_offset": -458.76524038272805,
+      "pwm_command": 1356.6358623803976,
+      "pwm_expected": 1356.6358623803976
+    },
+    {
+      "timestamp": 1.8,
+      "target_x_px": 182.87877519536138,
+      "pixel_offset": -457.1212248046386,
+      "pwm_command": 1357.1496172485504,
+      "pwm_expected": 1357.1496172485504
+    },
+    {
+      "timestamp": 1.8333333333333333,
+      "target_x_px": 184.2489477256838,
+      "pixel_offset": -455.7510522743162,
+      "pwm_command": 1357.5777961642762,
+      "pwm_expected": 1357.5777961642762
+    },
+    {
+      "timestamp": 1.8666666666666667,
+      "target_x_px": 187.69678177163718,
+      "pixel_offset": -452.3032182283628,
+      "pwm_command": 1358.6552443036367,
+      "pwm_expected": 1358.6552443036367
+    },
+    {
+      "timestamp": 1.9,
+      "target_x_px": 190.02881951760943,
+      "pixel_offset": -449.97118048239054,
+      "pwm_command": 1359.384006099253,
+      "pwm_expected": 1359.384006099253
+    },
+    {
+      "timestamp": 1.9333333333333333,
+      "target_x_px": 192.5659774484807,
+      "pixel_offset": -447.4340225515193,
+      "pwm_command": 1360.1768679526501,
+      "pwm_expected": 1360.1768679526501
+    },
+    {
+      "timestamp": 1.9666666666666666,
+      "target_x_px": 195.61307807392416,
+      "pixel_offset": -444.38692192607584,
+      "pwm_command": 1361.1290868981014,
+      "pwm_expected": 1361.1290868981014
+    },
+    {
+      "timestamp": 2.0,
+      "target_x_px": 197.89551597352153,
+      "pixel_offset": -442.1044840264785,
+      "pwm_command": 1361.8423487417253,
+      "pwm_expected": 1361.8423487417253
+    },
+    {
+      "timestamp": 2.033333333333333,
+      "target_x_px": 200.65973048880136,
+      "pixel_offset": -439.34026951119864,
+      "pwm_command": 1362.7061657777504,
+      "pwm_expected": 1362.7061657777504
+    },
+    {
+      "timestamp": 2.0666666666666664,
+      "target_x_px": 202.7100952135668,
+      "pixel_offset": -437.2899047864332,
+      "pwm_command": 1363.3469047542396,
+      "pwm_expected": 1363.3469047542396
+    },
+    {
+      "timestamp": 2.1,
+      "target_x_px": 204.37973183743466,
+      "pixel_offset": -435.62026816256537,
+      "pwm_command": 1363.8686661991983,
+      "pwm_expected": 1363.8686661991983
+    },
+    {
+      "timestamp": 2.1333333333333333,
+      "target_x_px": 207.38315901587717,
+      "pixel_offset": -432.61684098412286,
+      "pwm_command": 1364.8072371924616,
+      "pwm_expected": 1364.8072371924616
+    },
+    {
+      "timestamp": 2.1666666666666665,
+      "target_x_px": 209.0163349511336,
+      "pixel_offset": -430.98366504886644,
+      "pwm_command": 1365.3176046722292,
+      "pwm_expected": 1365.3176046722292
+    },
+    {
+      "timestamp": 2.2,
+      "target_x_px": 211.71884814313694,
+      "pixel_offset": -428.28115185686306,
+      "pwm_command": 1366.1621400447302,
+      "pwm_expected": 1366.1621400447302
+    },
+    {
+      "timestamp": 2.2333333333333334,
+      "target_x_px": 214.24862121621643,
+      "pixel_offset": -425.7513787837836,
+      "pwm_command": 1366.9526941300676,
+      "pwm_expected": 1366.9526941300676
+    },
+    {
+      "timestamp": 2.2666666666666666,
+      "target_x_px": 216.77504002049855,
+      "pixel_offset": -423.2249599795015,
+      "pwm_command": 1367.7422000064057,
+      "pwm_expected": 1367.7422000064057
+    },
+    {
+      "timestamp": 2.3,
+      "target_x_px": 220.03175860868484,
+      "pixel_offset": -419.96824139131513,
+      "pwm_command": 1368.759924565214,
+      "pwm_expected": 1368.759924565214
+    },
+    {
+      "timestamp": 2.3333333333333335,
+      "target_x_px": 222.19706330063542,
+      "pixel_offset": -417.8029366993646,
+      "pwm_command": 1369.4365822814486,
+      "pwm_expected": 1369.4365822814486
+    },
+    {
+      "timestamp": 2.3666666666666667,
+      "target_x_px": 223.73792504938604,
+      "pixel_offset": -416.26207495061396,
+      "pwm_command": 1369.9181015779332,
+      "pwm_expected": 1369.9181015779332
+    },
+    {
+      "timestamp": 2.4,
+      "target_x_px": 227.1299413971242,
+      "pixel_offset": -412.8700586028758,
+      "pwm_command": 1370.9781066866012,
+      "pwm_expected": 1370.9781066866012
+    },
+    {
+      "timestamp": 2.433333333333333,
+      "target_x_px": 228.83985797789427,
+      "pixel_offset": -411.16014202210573,
+      "pwm_command": 1371.512455618092,
+      "pwm_expected": 1371.512455618092
+    },
+    {
+      "timestamp": 2.466666666666667,
+      "target_x_px": 232.17763744947513,
+      "pixel_offset": -407.8223625505249,
+      "pwm_command": 1372.555511702961,
+      "pwm_expected": 1372.555511702961
+    },
+    {
+      "timestamp": 2.5,
+      "target_x_px": 234.50024642517295,
+      "pixel_offset": -405.4997535748271,
+      "pwm_command": 1373.2813270078666,
+      "pwm_expected": 1373.2813270078666
+    },
+    {
+      "timestamp": 2.533333333333333,
+      "target_x_px": 236.49332097254407,
+      "pixel_offset": -403.5066790274559,
+      "pwm_command": 1373.90416280392,
+      "pwm_expected": 1373.90416280392
+    },
+    {
+      "timestamp": 2.5666666666666664,
+      "target_x_px": 239.438202903316,
+      "pixel_offset": -400.561797096684,
+      "pwm_command": 1374.8244384072862,
+      "pwm_expected": 1374.8244384072862
+    },
+    {
+      "timestamp": 2.6,
+      "target_x_px": 242.68288725557238,
+      "pixel_offset": -397.3171127444276,
+      "pwm_command": 1375.8384022673663,
+      "pwm_expected": 1375.8384022673663
+    },
+    {
+      "timestamp": 2.6333333333333333,
+      "target_x_px": 243.61268158473203,
+      "pixel_offset": -396.38731841526794,
+      "pwm_command": 1376.1289629952287,
+      "pwm_expected": 1376.1289629952287
+    },
+    {
+      "timestamp": 2.6666666666666665,
+      "target_x_px": 246.179325831553,
+      "pixel_offset": -393.820674168447,
+      "pwm_command": 1376.9310393223602,
+      "pwm_expected": 1376.9310393223602
+    },
+    {
+      "timestamp": 2.7,
+      "target_x_px": 249.7042977895037,
+      "pixel_offset": -390.2957022104963,
+      "pwm_command": 1378.0325930592198,
+      "pwm_expected": 1378.0325930592198
+    },
+    {
+      "timestamp": 2.7333333333333334,
+      "target_x_px": 252.0650213979555,
+      "pixel_offset": -387.9349786020445,
+      "pwm_command": 1378.7703191868611,
+      "pwm_expected": 1378.7703191868611
+    },
+    {
+      "timestamp": 2.7666666666666666,
+      "target_x_px": 254.4526967466639,
+      "pixel_offset": -385.5473032533361,
+      "pwm_command": 1379.5164677333325,
+      "pwm_expected": 1379.5164677333325
+    },
+    {
+      "timestamp": 2.8,
+      "target_x_px": 256.37730594199854,
+      "pixel_offset": -383.62269405800146,
+      "pwm_command": 1380.1179081068744,
+      "pwm_expected": 1380.1179081068744
+    },
+    {
+      "timestamp": 2.8333333333333335,
+      "target_x_px": 258.51357611852063,
+      "pixel_offset": -381.48642388147937,
+      "pwm_command": 1380.7854925370377,
+      "pwm_expected": 1380.7854925370377
+    },
+    {
+      "timestamp": 2.8666666666666667,
+      "target_x_px": 261.37811581195956,
+      "pixel_offset": -378.62188418804044,
+      "pwm_command": 1381.6806611912373,
+      "pwm_expected": 1381.6806611912373
+    },
+    {
+      "timestamp": 2.9,
+      "target_x_px": 264.013345399665,
+      "pixel_offset": -375.986654600335,
+      "pwm_command": 1382.5041704373953,
+      "pwm_expected": 1382.5041704373953
+    },
+    {
+      "timestamp": 2.933333333333333,
+      "target_x_px": 266.3398342792723,
+      "pixel_offset": -373.6601657207277,
+      "pwm_command": 1383.2311982122726,
+      "pwm_expected": 1383.2311982122726
+    },
+    {
+      "timestamp": 2.966666666666667,
+      "target_x_px": 268.6593382500477,
+      "pixel_offset": -371.3406617499523,
+      "pwm_command": 1383.9560432031399,
+      "pwm_expected": 1383.9560432031399
+    },
+    {
+      "timestamp": 3.0,
+      "target_x_px": 271.5628336738825,
+      "pixel_offset": -368.4371663261175,
+      "pwm_command": 1384.8633855230883,
+      "pwm_expected": 1384.8633855230883
+    },
+    {
+      "timestamp": 3.033333333333333,
+      "target_x_px": 273.1728870843028,
+      "pixel_offset": -366.8271129156972,
+      "pwm_command": 1385.3665272138446,
+      "pwm_expected": 1385.3665272138446
+    },
+    {
+      "timestamp": 3.0666666666666664,
+      "target_x_px": 276.0549352740037,
+      "pixel_offset": -363.9450647259963,
+      "pwm_command": 1386.2671672731262,
+      "pwm_expected": 1386.2671672731262
+    },
+    {
+      "timestamp": 3.1,
+      "target_x_px": 278.8616188122868,
+      "pixel_offset": -361.1383811877132,
+      "pwm_command": 1387.1442558788397,
+      "pwm_expected": 1387.1442558788397
+    },
+    {
+      "timestamp": 3.1333333333333333,
+      "target_x_px": 280.6599364742992,
+      "pixel_offset": -359.3400635257008,
+      "pwm_command": 1387.7062301482185,
+      "pwm_expected": 1387.7062301482185
+    },
+    {
+      "timestamp": 3.1666666666666665,
+      "target_x_px": 283.31840919063313,
+      "pixel_offset": -356.68159080936687,
+      "pwm_command": 1388.537002872073,
+      "pwm_expected": 1388.537002872073
+    },
+    {
+      "timestamp": 3.2,
+      "target_x_px": 286.1070468720651,
+      "pixel_offset": -353.8929531279349,
+      "pwm_command": 1389.4084521475204,
+      "pwm_expected": 1389.4084521475204
+    },
+    {
+      "timestamp": 3.2333333333333334,
+      "target_x_px": 288.54492379625896,
+      "pixel_offset": -351.45507620374104,
+      "pwm_command": 1390.1702886863309,
+      "pwm_expected": 1390.1702886863309
+    },
+    {
+      "timestamp": 3.2666666666666666,
+      "target_x_px": 290.4747379485661,
+      "pixel_offset": -349.5252620514339,
+      "pwm_command": 1390.773355608927,
+      "pwm_expected": 1390.773355608927
+    },
+    {
+      "timestamp": 3.3,
+      "target_x_px": 293.404104359223,
+      "pixel_offset": -346.595895640777,
+      "pwm_command": 1391.6887826122572,
+      "pwm_expected": 1391.6887826122572
+    },
+    {
+      "timestamp": 3.3333333333333335,
+      "target_x_px": 296.0122270135075,
+      "pixel_offset": -343.9877729864925,
+      "pwm_command": 1392.5038209417212,
+      "pwm_expected": 1392.5038209417212
+    },
+    {
+      "timestamp": 3.3666666666666667,
+      "target_x_px": 298.8331922882543,
+      "pixel_offset": -341.1668077117457,
+      "pwm_command": 1393.3853725900794,
+      "pwm_expected": 1393.3853725900794
+    },
+    {
+      "timestamp": 3.4,
+      "target_x_px": 300.06116531602146,
+      "pixel_offset": -339.93883468397854,
+      "pwm_command": 1393.7691141612568,
+      "pwm_expected": 1393.7691141612568
+    },
+    {
+      "timestamp": 3.433333333333333,
+      "target_x_px": 303.46585096693764,
+      "pixel_offset": -336.53414903306236,
+      "pwm_command": 1394.833078427168,
+      "pwm_expected": 1394.833078427168
+    },
+    {
+      "timestamp": 3.466666666666667,
+      "target_x_px": 305.9241905098197,
+      "pixel_offset": -334.0758094901803,
+      "pwm_command": 1395.6013095343187,
+      "pwm_expected": 1395.6013095343187
+    },
+    {
+      "timestamp": 3.5,
+      "target_x_px": 308.4104452553466,
+      "pixel_offset": -331.5895547446534,
+      "pwm_command": 1396.3782641422958,
+      "pwm_expected": 1396.3782641422958
+    },
+    {
+      "timestamp": 3.533333333333333,
+      "target_x_px": 311.06033421507993,
+      "pixel_offset": -328.93966578492007,
+      "pwm_command": 1397.2063544422124,
+      "pwm_expected": 1397.2063544422124
+    },
+    {
+      "timestamp": 3.5666666666666664,
+      "target_x_px": 312.88403204434644,
+      "pixel_offset": -327.11596795565356,
+      "pwm_command": 1397.7762600138583,
+      "pwm_expected": 1397.7762600138583
+    },
+    {
+      "timestamp": 3.6,
+      "target_x_px": 315.11358739273123,
+      "pixel_offset": -324.88641260726877,
+      "pwm_command": 1398.4729960602285,
+      "pwm_expected": 1398.4729960602285
+    },
+    {
+      "timestamp": 3.6333333333333333,
+      "target_x_px": 317.71565155941875,
+      "pixel_offset": -322.28434844058125,
+      "pwm_command": 1399.2861411123183,
+      "pwm_expected": 1399.2861411123183
+    },
+    {
+      "timestamp": 3.6666666666666665,
+      "target_x_px": 321.5739959500034,
+      "pixel_offset": -318.4260040499966,
+      "pwm_command": 1400.491873734376,
+      "pwm_expected": 1400.491873734376
+    },
+    {
+      "timestamp": 3.6999999999999997,
+      "target_x_px": 323.21813009518723,
+      "pixel_offset": -316.78186990481277,
+      "pwm_command": 1401.005665654746,
+      "pwm_expected": 1401.005665654746
+    },
+    {
+      "timestamp": 3.7333333333333334,
+      "target_x_px": 325.0973674004386,
+      "pixel_offset": -314.9026325995614,
+      "pwm_command": 1401.5929273126371,
+      "pwm_expected": 1401.5929273126371
+    },
+    {
+      "timestamp": 3.7666666666666666,
+      "target_x_px": 327.8238066762144,
+      "pixel_offset": -312.1761933237856,
+      "pwm_command": 1402.444939586317,
+      "pwm_expected": 1402.444939586317
+    },
+    {
+      "timestamp": 3.8,
+      "target_x_px": 329.89234814537,
+      "pixel_offset": -310.10765185463,
+      "pwm_command": 1403.091358795428,
+      "pwm_expected": 1403.091358795428
+    },
+    {
+      "timestamp": 3.8333333333333335,
+      "target_x_px": 332.3431500174748,
+      "pixel_offset": -307.6568499825252,
+      "pwm_command": 1403.8572343804608,
+      "pwm_expected": 1403.8572343804608
+    },
+    {
+      "timestamp": 3.8666666666666667,
+      "target_x_px": 335.1894525866186,
+      "pixel_offset": -304.8105474133814,
+      "pwm_command": 1404.7467039333183,
+      "pwm_expected": 1404.7467039333183
+    },
+    {
+      "timestamp": 3.9,
+      "target_x_px": 338.6969720446627,
+      "pixel_offset": -301.3030279553373,
+      "pwm_command": 1405.8428037639571,
+      "pwm_expected": 1405.8428037639571
+    },
+    {
+      "timestamp": 3.933333333333333,
+      "target_x_px": 339.0707620400045,
+      "pixel_offset": -300.9292379599955,
+      "pwm_command": 1405.9596131375015,
+      "pwm_expected": 1405.9596131375015
+    },
+    {
+      "timestamp": 3.966666666666667,
+      "target_x_px": 342.2107734342825,
+      "pixel_offset": -297.7892265657175,
+      "pwm_command": 1406.9408666982133,
+      "pwm_expected": 1406.9408666982133
+    },
+    {
+      "timestamp": 4.0,
+      "target_x_px": 344.60373963078365,
+      "pixel_offset": -295.39626036921635,
+      "pwm_command": 1407.68866863462,
+      "pwm_expected": 1407.68866863462
+    },
+    {
+      "timestamp": 4.033333333333333,
+      "target_x_px": 347.71082697282355,
+      "pixel_offset": -292.28917302717645,
+      "pwm_command": 1408.6596334290073,
+      "pwm_expected": 1408.6596334290073
+    },
+    {
+      "timestamp": 4.066666666666666,
+      "target_x_px": 349.3165184631387,
+      "pixel_offset": -290.6834815368613,
+      "pwm_command": 1409.161412019731,
+      "pwm_expected": 1409.161412019731
+    },
+    {
+      "timestamp": 4.1,
+      "target_x_px": 352.13752734441954,
+      "pixel_offset": -287.86247265558046,
+      "pwm_command": 1410.042977295131,
+      "pwm_expected": 1410.042977295131
+    },
+    {
+      "timestamp": 4.133333333333333,
+      "target_x_px": 355.71606045347386,
+      "pixel_offset": -284.28393954652614,
+      "pwm_command": 1411.1612688917105,
+      "pwm_expected": 1411.1612688917105
+    },
+    {
+      "timestamp": 4.166666666666667,
+      "target_x_px": 356.66122468949914,
+      "pixel_offset": -283.33877531050086,
+      "pwm_command": 1411.4566327154685,
+      "pwm_expected": 1411.4566327154685
+    },
+    {
+      "timestamp": 4.2,
+      "target_x_px": 360.8110780985063,
+      "pixel_offset": -279.1889219014937,
+      "pwm_command": 1412.7534619057833,
+      "pwm_expected": 1412.7534619057833
+    },
+    {
+      "timestamp": 4.233333333333333,
+      "target_x_px": 361.4486483503563,
+      "pixel_offset": -278.5513516496437,
+      "pwm_command": 1412.9527026094863,
+      "pwm_expected": 1412.9527026094863
+    },
+    {
+      "timestamp": 4.266666666666667,
+      "target_x_px": 365.30012224126,
+      "pixel_offset": -274.69987775874,
+      "pwm_command": 1414.1562882003936,
+      "pwm_expected": 1414.1562882003936
+    },
+    {
+      "timestamp": 4.3,
+      "target_x_px": 367.3469097140731,
+      "pixel_offset": -272.6530902859269,
+      "pwm_command": 1414.795909285648,
+      "pwm_expected": 1414.795909285648
+    },
+    {
+      "timestamp": 4.333333333333333,
+      "target_x_px": 369.11986809754427,
+      "pixel_offset": -270.88013190245573,
+      "pwm_command": 1415.3499587804827,
+      "pwm_expected": 1415.3499587804827
+    },
+    {
+      "timestamp": 4.366666666666666,
+      "target_x_px": 370.4210329966321,
+      "pixel_offset": -269.5789670033679,
+      "pwm_command": 1415.7565728114475,
+      "pwm_expected": 1415.7565728114475
+    },
+    {
+      "timestamp": 4.4,
+      "target_x_px": 374.37371592430344,
+      "pixel_offset": -265.62628407569656,
+      "pwm_command": 1416.9917862263449,
+      "pwm_expected": 1416.9917862263449
+    },
+    {
+      "timestamp": 4.433333333333334,
+      "target_x_px": 377.7745389852992,
+      "pixel_offset": -262.2254610147008,
+      "pwm_command": 1418.054543432906,
+      "pwm_expected": 1418.054543432906
+    },
+    {
+      "timestamp": 4.466666666666667,
+      "target_x_px": 379.1966444233182,
+      "pixel_offset": -260.8033555766818,
+      "pwm_command": 1418.498951382287,
+      "pwm_expected": 1418.498951382287
+    },
+    {
+      "timestamp": 4.5,
+      "target_x_px": 382.59563664453304,
+      "pixel_offset": -257.40436335546696,
+      "pwm_command": 1419.5611364514166,
+      "pwm_expected": 1419.5611364514166
+    },
+    {
+      "timestamp": 4.533333333333333,
+      "target_x_px": 384.9149152094108,
+      "pixel_offset": -255.08508479058918,
+      "pwm_command": 1420.2859110029408,
+      "pwm_expected": 1420.2859110029408
+    },
+    {
+      "timestamp": 4.566666666666666,
+      "target_x_px": 386.30091234114263,
+      "pixel_offset": -253.69908765885737,
+      "pwm_command": 1420.7190351066072,
+      "pwm_expected": 1420.7190351066072
+    },
+    {
+      "timestamp": 4.6,
+      "target_x_px": 389.34952984778675,
+      "pixel_offset": -250.65047015221325,
+      "pwm_command": 1421.6717280774333,
+      "pwm_expected": 1421.6717280774333
+    },
+    {
+      "timestamp": 4.633333333333333,
+      "target_x_px": 391.7432343758283,
+      "pixel_offset": -248.2567656241717,
+      "pwm_command": 1422.4197607424464,
+      "pwm_expected": 1422.4197607424464
+    },
+    {
+      "timestamp": 4.666666666666667,
+      "target_x_px": 394.2234253392923,
+      "pixel_offset": -245.7765746607077,
+      "pwm_command": 1423.194820418529,
+      "pwm_expected": 1423.194820418529
+    },
+    {
+      "timestamp": 4.7,
+      "target_x_px": 397.4180084080727,
+      "pixel_offset": -242.5819915919273,
+      "pwm_command": 1424.1931276275227,
+      "pwm_expected": 1424.1931276275227
+    },
+    {
+      "timestamp": 4.733333333333333,
+      "target_x_px": 400.14985002066146,
+      "pixel_offset": -239.85014997933854,
+      "pwm_command": 1425.0468281314568,
+      "pwm_expected": 1425.0468281314568
+    },
+    {
+      "timestamp": 4.766666666666667,
+      "target_x_px": 401.4657741191489,
+      "pixel_offset": -238.53422588085112,
+      "pwm_command": 1425.458054412234,
+      "pwm_expected": 1425.458054412234
+    },
+    {
+      "timestamp": 4.8,
+      "target_x_px": 404.1404959338675,
+      "pixel_offset": -235.8595040661325,
+      "pwm_command": 1426.2939049793335,
+      "pwm_expected": 1426.2939049793335
+    },
+    {
+      "timestamp": 4.833333333333333,
+      "target_x_px": 406.35427220815467,
+      "pixel_offset": -233.64572779184533,
+      "pwm_command": 1426.9857100650484,
+      "pwm_expected": 1426.9857100650484
+    },
+    {
+      "timestamp": 4.866666666666666,
+      "target_x_px": 408.62198428819454,
+      "pixel_offset": -231.37801571180546,
+      "pwm_command": 1427.6943700900608,
+      "pwm_expected": 1427.6943700900608
+    },
+    {
+      "timestamp": 4.9,
+      "target_x_px": 411.5535077429825,
+      "pixel_offset": -228.4464922570175,
+      "pwm_command": 1428.6104711696821,
+      "pwm_expected": 1428.6104711696821
+    },
+    {
+      "timestamp": 4.933333333333334,
+      "target_x_px": 414.28313327105,
+      "pixel_offset": -225.71686672894998,
+      "pwm_command": 1429.463479147203,
+      "pwm_expected": 1429.463479147203
+    },
+    {
+      "timestamp": 4.966666666666667,
+      "target_x_px": 416.6980977260862,
+      "pixel_offset": -223.3019022739138,
+      "pwm_command": 1430.218155539402,
+      "pwm_expected": 1430.218155539402
+    },
+    {
+      "timestamp": 5.0,
+      "target_x_px": 418.33550249453896,
+      "pixel_offset": -221.66449750546104,
+      "pwm_command": 1430.7298445295435,
+      "pwm_expected": 1430.7298445295435
+    },
+    {
+      "timestamp": 5.033333333333333,
+      "target_x_px": 421.5819801358949,
+      "pixel_offset": -218.41801986410508,
+      "pwm_command": 1431.7443687924672,
+      "pwm_expected": 1431.7443687924672
+    },
+    {
+      "timestamp": 5.066666666666666,
+      "target_x_px": 423.65621586968456,
+      "pixel_offset": -216.34378413031544,
+      "pwm_command": 1432.3925674592765,
+      "pwm_expected": 1432.3925674592765
+    },
+    {
+      "timestamp": 5.1,
+      "target_x_px": 426.76383244789423,
+      "pixel_offset": -213.23616755210577,
+      "pwm_command": 1433.3636976399669,
+      "pwm_expected": 1433.3636976399669
+    },
+    {
+      "timestamp": 5.133333333333333,
+      "target_x_px": 428.85688202391833,
+      "pixel_offset": -211.14311797608167,
+      "pwm_command": 1434.0177756324745,
+      "pwm_expected": 1434.0177756324745
+    },
+    {
+      "timestamp": 5.166666666666667,
+      "target_x_px": 430.93282606505306,
+      "pixel_offset": -209.06717393494694,
+      "pwm_command": 1434.666508145329,
+      "pwm_expected": 1434.666508145329
+    },
+    {
+      "timestamp": 5.2,
+      "target_x_px": 433.912708174494,
+      "pixel_offset": -206.087291825506,
+      "pwm_command": 1435.5977213045294,
+      "pwm_expected": 1435.5977213045294
+    },
+    {
+      "timestamp": 5.233333333333333,
+      "target_x_px": 436.6110727369105,
+      "pixel_offset": -203.3889272630895,
+      "pwm_command": 1436.4409602302846,
+      "pwm_expected": 1436.4409602302846
+    },
+    {
+      "timestamp": 5.266666666666667,
+      "target_x_px": 438.7576431523142,
+      "pixel_offset": -201.2423568476858,
+      "pwm_command": 1437.1117634850982,
+      "pwm_expected": 1437.1117634850982
+    },
+    {
+      "timestamp": 5.3,
+      "target_x_px": 441.0370831762442,
+      "pixel_offset": -198.9629168237558,
+      "pwm_command": 1437.8240884925763,
+      "pwm_expected": 1437.8240884925763
+    },
+    {
+      "timestamp": 5.333333333333333,
+      "target_x_px": 443.3818313158297,
+      "pixel_offset": -196.6181686841703,
+      "pwm_command": 1438.5568222861968,
+      "pwm_expected": 1438.5568222861968
+    },
+    {
+      "timestamp": 5.366666666666666,
+      "target_x_px": 445.3825563250499,
+      "pixel_offset": -194.6174436749501,
+      "pwm_command": 1439.1820488515782,
+      "pwm_expected": 1439.1820488515782
+    },
+    {
+      "timestamp": 5.4,
+      "target_x_px": 447.7469913092502,
+      "pixel_offset": -192.25300869074982,
+      "pwm_command": 1439.9209347841406,
+      "pwm_expected": 1439.9209347841406
+    },
+    {
+      "timestamp": 5.433333333333334,
+      "target_x_px": 451.2873887700834,
+      "pixel_offset": -188.7126112299166,
+      "pwm_command": 1441.0273089906511,
+      "pwm_expected": 1441.0273089906511
+    },
+    {
+      "timestamp": 5.466666666666667,
+      "target_x_px": 453.47872657519275,
+      "pixel_offset": -186.52127342480725,
+      "pwm_command": 1441.7121020547477,
+      "pwm_expected": 1441.7121020547477
+    },
+    {
+      "timestamp": 5.5,
+      "target_x_px": 455.61887661357656,
+      "pixel_offset": -184.38112338642344,
+      "pwm_command": 1442.3808989417428,
+      "pwm_expected": 1442.3808989417428
+    },
+    {
+      "timestamp": 5.533333333333333,
+      "target_x_px": 458.12123561243016,
+      "pixel_offset": -181.87876438756984,
+      "pwm_command": 1443.1628861288843,
+      "pwm_expected": 1443.1628861288843
+    },
+    {
+      "timestamp": 5.566666666666666,
+      "target_x_px": 461.0292265333755,
+      "pixel_offset": -178.9707734666245,
+      "pwm_command": 1444.0716332916797,
+      "pwm_expected": 1444.0716332916797
+    },
+    {
+      "timestamp": 5.6,
+      "target_x_px": 462.58725140160374,
+      "pixel_offset": -177.41274859839626,
+      "pwm_command": 1444.5585160630012,
+      "pwm_expected": 1444.5585160630012
+    },
+    {
+      "timestamp": 5.633333333333333,
+      "target_x_px": 465.6647990604711,
+      "pixel_offset": -174.33520093952887,
+      "pwm_command": 1445.5202497063972,
+      "pwm_expected": 1445.5202497063972
+    },
+    {
+      "timestamp": 5.666666666666667,
+      "target_x_px": 467.50555646888347,
+      "pixel_offset": -172.49444353111653,
+      "pwm_command": 1446.095486396526,
+      "pwm_expected": 1446.095486396526
+    },
+    {
+      "timestamp": 5.7,
+      "target_x_px": 470.4974832855544,
+      "pixel_offset": -169.50251671444562,
+      "pwm_command": 1447.0304635267357,
+      "pwm_expected": 1447.0304635267357
+    },
+    {
+      "timestamp": 5.733333333333333,
+      "target_x_px": 472.59781418052415,
+      "pixel_offset": -167.40218581947585,
+      "pwm_command": 1447.686816931414,
+      "pwm_expected": 1447.686816931414
+    },
+    {
+      "timestamp": 5.766666666666667,
+      "target_x_px": 474.56762449591804,
+      "pixel_offset": -165.43237550408196,
+      "pwm_command": 1448.3023826549743,
+      "pwm_expected": 1448.3023826549743
+    },
+    {
+      "timestamp": 5.8,
+      "target_x_px": 477.3907778893738,
+      "pixel_offset": -162.6092221106262,
+      "pwm_command": 1449.1846180904292,
+      "pwm_expected": 1449.1846180904292
+    },
+    {
+      "timestamp": 5.833333333333333,
+      "target_x_px": 480.3637871161323,
+      "pixel_offset": -159.6362128838677,
+      "pwm_command": 1450.1136834737913,
+      "pwm_expected": 1450.1136834737913
+    },
+    {
+      "timestamp": 5.866666666666666,
+      "target_x_px": 483.09549647826765,
+      "pixel_offset": -156.90450352173235,
+      "pwm_command": 1450.9673426494587,
+      "pwm_expected": 1450.9673426494587
+    },
+    {
+      "timestamp": 5.9,
+      "target_x_px": 485.11549189604864,
+      "pixel_offset": -154.88450810395136,
+      "pwm_command": 1451.5985912175151,
+      "pwm_expected": 1451.5985912175151
+    },
+    {
+      "timestamp": 5.933333333333334,
+      "target_x_px": 487.57407676533717,
+      "pixel_offset": -152.42592323466283,
+      "pwm_command": 1452.3668989891678,
+      "pwm_expected": 1452.3668989891678
+    },
+    {
+      "timestamp": 5.966666666666667,
+      "target_x_px": 490.20302594683574,
+      "pixel_offset": -149.79697405316426,
+      "pwm_command": 1453.1884456083862,
+      "pwm_expected": 1453.1884456083862
+    },
+    {
+      "timestamp": 6.0,
+      "target_x_px": 492.7596732571206,
+      "pixel_offset": -147.2403267428794,
+      "pwm_command": 1453.9873978928501,
+      "pwm_expected": 1453.9873978928501
+    },
+    {
+      "timestamp": 6.033333333333333,
+      "target_x_px": 494.90395325910487,
+      "pixel_offset": -145.09604674089513,
+      "pwm_command": 1454.6574853934703,
+      "pwm_expected": 1454.6574853934703
+    },
+    {
+      "timestamp": 6.066666666666666,
+      "target_x_px": 497.7617386625222,
+      "pixel_offset": -142.2382613374778,
+      "pwm_command": 1455.5505433320382,
+      "pwm_expected": 1455.5505433320382
+    },
+    {
+      "timestamp": 6.1,
+      "target_x_px": 499.9870462409052,
+      "pixel_offset": -140.01295375909478,
+      "pwm_command": 1456.245951950283,
+      "pwm_expected": 1456.245951950283
+    },
+    {
+      "timestamp": 6.133333333333333,
+      "target_x_px": 502.38217138260774,
+      "pixel_offset": -137.61782861739226,
+      "pwm_command": 1456.994428557065,
+      "pwm_expected": 1456.994428557065
+    },
+    {
+      "timestamp": 6.166666666666667,
+      "target_x_px": 504.80392175379615,
+      "pixel_offset": -135.19607824620385,
+      "pwm_command": 1457.7512255480613,
+      "pwm_expected": 1457.7512255480613
+    },
+    {
+      "timestamp": 6.2,
+      "target_x_px": 507.97557180389754,
+      "pixel_offset": -132.02442819610246,
+      "pwm_command": 1458.742366188718,
+      "pwm_expected": 1458.742366188718
+    },
+    {
+      "timestamp": 6.233333333333333,
+      "target_x_px": 510.7849245620891,
+      "pixel_offset": -129.2150754379109,
+      "pwm_command": 1459.6202889256529,
+      "pwm_expected": 1459.6202889256529
+    },
+    {
+      "timestamp": 6.266666666666667,
+      "target_x_px": 512.602826985027,
+      "pixel_offset": -127.39717301497296,
+      "pwm_command": 1460.188383432821,
+      "pwm_expected": 1460.188383432821
+    },
+    {
+      "timestamp": 6.3,
+      "target_x_px": 515.7199014666088,
+      "pixel_offset": -124.2800985333912,
+      "pwm_command": 1461.1624692083153,
+      "pwm_expected": 1461.1624692083153
+    },
+    {
+      "timestamp": 6.333333333333333,
+      "target_x_px": 516.6634724122429,
+      "pixel_offset": -123.33652758775713,
+      "pwm_command": 1461.457335128826,
+      "pwm_expected": 1461.457335128826
+    },
+    {
+      "timestamp": 6.366666666666666,
+      "target_x_px": 518.4797188045118,
+      "pixel_offset": -121.52028119548822,
+      "pwm_command": 1462.0249121264098,
+      "pwm_expected": 1462.0249121264098
+    },
+    {
+      "timestamp": 6.4,
+      "target_x_px": 521.6204336692232,
+      "pixel_offset": -118.37956633077681,
+      "pwm_command": 1463.0063855216322,
+      "pwm_expected": 1463.0063855216322
+    },
+    {
+      "timestamp": 6.433333333333334,
+      "target_x_px": 524.629211321222,
+      "pixel_offset": -115.37078867877801,
+      "pwm_command": 1463.946628537882,
+      "pwm_expected": 1463.946628537882
+    },
+    {
+      "timestamp": 6.466666666666667,
+      "target_x_px": 527.3918785857597,
+      "pixel_offset": -112.60812141424026,
+      "pwm_command": 1464.80996205805,
+      "pwm_expected": 1464.80996205805
+    },
+    {
+      "timestamp": 6.5,
+      "target_x_px": 528.9257926643259,
+      "pixel_offset": -111.07420733567415,
+      "pwm_command": 1465.2893102076018,
+      "pwm_expected": 1465.2893102076018
+    },
+    {
+      "timestamp": 6.533333333333333,
+      "target_x_px": 531.1732167298229,
+      "pixel_offset": -108.82678327017709,
+      "pwm_command": 1465.9916302280697,
+      "pwm_expected": 1465.9916302280697
+    },
+    {
+      "timestamp": 6.566666666666666,
+      "target_x_px": 534.8813867270272,
+      "pixel_offset": -105.11861327297277,
+      "pwm_command": 1467.150433352196,
+      "pwm_expected": 1467.150433352196
+    },
+    {
+      "timestamp": 6.6,
+      "target_x_px": 535.8934327354546,
+      "pixel_offset": -104.10656726454545,
+      "pwm_command": 1467.4666977298295,
+      "pwm_expected": 1467.4666977298295
+    },
+    {
+      "timestamp": 6.633333333333333,
+      "target_x_px": 539.1510634107069,
+      "pixel_offset": -100.84893658929309,
+      "pwm_command": 1468.484707315846,
+      "pwm_expected": 1468.484707315846
+    },
+    {
+      "timestamp": 6.666666666666667,
+      "target_x_px": 540.8694528372696,
+      "pixel_offset": -99.13054716273041,
+      "pwm_command": 1469.0217040116468,
+      "pwm_expected": 1469.0217040116468
+    },
+    {
+      "timestamp": 6.7,
+      "target_x_px": 544.1276218498591,
+      "pixel_offset": -95.87237815014089,
+      "pwm_command": 1470.039881828081,
+      "pwm_expected": 1470.039881828081
+    },
+    {
+      "timestamp": 6.733333333333333,
+      "target_x_px": 546.3583005975936,
+      "pixel_offset": -93.6416994024064,
+      "pwm_command": 1470.736968936748,
+      "pwm_expected": 1470.736968936748
+    },
+    {
+      "timestamp": 6.766666666666667,
+      "target_x_px": 548.5078564519755,
+      "pixel_offset": -91.4921435480245,
+      "pwm_command": 1471.4087051412423,
+      "pwm_expected": 1471.4087051412423
+    },
+    {
+      "timestamp": 6.8,
+      "target_x_px": 551.560147815856,
+      "pixel_offset": -88.439852184144,
+      "pwm_command": 1472.362546192455,
+      "pwm_expected": 1472.362546192455
+    },
+    {
+      "timestamp": 6.833333333333333,
+      "target_x_px": 554.3141407723778,
+      "pixel_offset": -85.68585922762225,
+      "pwm_command": 1473.223168991368,
+      "pwm_expected": 1473.223168991368
+    },
+    {
+      "timestamp": 6.866666666666666,
+      "target_x_px": 555.6496095812988,
+      "pixel_offset": -84.35039041870118,
+      "pwm_command": 1473.640502994156,
+      "pwm_expected": 1473.640502994156
+    },
+    {
+      "timestamp": 6.8999999999999995,
+      "target_x_px": 559.0411570059898,
+      "pixel_offset": -80.95884299401018,
+      "pwm_command": 1474.7003615643719,
+      "pwm_expected": 1474.7003615643719
+    },
+    {
+      "timestamp": 6.933333333333334,
+      "target_x_px": 562.1089093210946,
+      "pixel_offset": -77.89109067890536,
+      "pwm_command": 1475.659034162842,
+      "pwm_expected": 1475.659034162842
+    },
+    {
+      "timestamp": 6.966666666666667,
+      "target_x_px": 564.3813152586986,
+      "pixel_offset": -75.61868474130142,
+      "pwm_command": 1476.3691610183432,
+      "pwm_expected": 1476.3691610183432
+    },
+    {
+      "timestamp": 7.0,
+      "target_x_px": 567.280373962441,
+      "pixel_offset": -72.71962603755901,
+      "pwm_command": 1477.2751168632628,
+      "pwm_expected": 1477.2751168632628
+    },
+    {
+      "timestamp": 7.033333333333333,
+      "target_x_px": 568.5838512590939,
+      "pixel_offset": -71.41614874090612,
+      "pwm_command": 1477.682453518467,
+      "pwm_expected": 1477.682453518467
+    },
+    {
+      "timestamp": 7.066666666666666,
+      "target_x_px": 571.4893546414592,
+      "pixel_offset": -68.51064535854084,
+      "pwm_command": 1478.590423325456,
+      "pwm_expected": 1478.590423325456
+    },
+    {
+      "timestamp": 7.1,
+      "target_x_px": 573.1425382697099,
+      "pixel_offset": -66.85746173029008,
+      "pwm_command": 1479.1070432092843,
+      "pwm_expected": 1479.1070432092843
+    },
+    {
+      "timestamp": 7.133333333333333,
+      "target_x_px": 576.6125455767581,
+      "pixel_offset": -63.387454423241934,
+      "pwm_command": 1480.1914204927368,
+      "pwm_expected": 1480.1914204927368
+    },
+    {
+      "timestamp": 7.166666666666667,
+      "target_x_px": 577.9500374103338,
+      "pixel_offset": -62.049962589666166,
+      "pwm_command": 1480.6093866907293,
+      "pwm_expected": 1480.6093866907293
+    },
+    {
+      "timestamp": 7.2,
+      "target_x_px": 580.8652965827778,
+      "pixel_offset": -59.13470341722223,
+      "pwm_command": 1481.520405182118,
+      "pwm_expected": 1481.520405182118
+    },
+    {
+      "timestamp": 7.233333333333333,
+      "target_x_px": 584.2095118593813,
+      "pixel_offset": -55.79048814061866,
+      "pwm_command": 1482.5654724560566,
+      "pwm_expected": 1482.5654724560566
+    },
+    {
+      "timestamp": 7.266666666666667,
+      "target_x_px": 586.7309744394523,
+      "pixel_offset": -53.269025560547675,
+      "pwm_command": 1483.3534295123288,
+      "pwm_expected": 1483.3534295123288
+    },
+    {
+      "timestamp": 7.3,
+      "target_x_px": 587.5233087803224,
+      "pixel_offset": -52.476691219677605,
+      "pwm_command": 1483.6010339938507,
+      "pwm_expected": 1483.6010339938507
+    },
+    {
+      "timestamp": 7.333333333333333,
+      "target_x_px": 591.0253660578029,
+      "pixel_offset": -48.9746339421971,
+      "pwm_command": 1484.6954268930633,
+      "pwm_expected": 1484.6954268930633
+    },
+    {
+      "timestamp": 7.366666666666666,
+      "target_x_px": 592.2579456166467,
+      "pixel_offset": -47.74205438335332,
+      "pwm_command": 1485.080608005202,
+      "pwm_expected": 1485.080608005202
+    },
+    {
+      "timestamp": 7.3999999999999995,
+      "target_x_px": 595.0977652497476,
+      "pixel_offset": -44.90223475025243,
+      "pwm_command": 1485.968051640546,
+      "pwm_expected": 1485.968051640546
+    },
+    {
+      "timestamp": 7.433333333333334,
+      "target_x_px": 598.3916324563818,
+      "pixel_offset": -41.608367543618215,
+      "pwm_command": 1486.9973851426194,
+      "pwm_expected": 1486.9973851426194
+    },
+    {
+      "timestamp": 7.466666666666667,
+      "target_x_px": 600.4097332079983,
+      "pixel_offset": -39.59026679200167,
+      "pwm_command": 1487.6280416274994,
+      "pwm_expected": 1487.6280416274994
+    },
+    {
+      "timestamp": 7.5,
+      "target_x_px": 603.0936604513635,
+      "pixel_offset": -36.90633954863654,
+      "pwm_command": 1488.466768891051,
+      "pwm_expected": 1488.466768891051
+    },
+    {
+      "timestamp": 7.533333333333333,
+      "target_x_px": 605.0904703101656,
+      "pixel_offset": -34.90952968983436,
+      "pwm_command": 1489.0907719719269,
+      "pwm_expected": 1489.0907719719269
+    },
+    {
+      "timestamp": 7.566666666666666,
+      "target_x_px": 607.7765378574804,
+      "pixel_offset": -32.223462142519566,
+      "pwm_command": 1489.9301680804626,
+      "pwm_expected": 1489.9301680804626
+    },
+    {
+      "timestamp": 7.6,
+      "target_x_px": 610.4464848200228,
+      "pixel_offset": -29.55351517997724,
+      "pwm_command": 1490.7645265062572,
+      "pwm_expected": 1490.7645265062572
+    },
+    {
+      "timestamp": 7.633333333333333,
+      "target_x_px": 612.6815086806597,
+      "pixel_offset": -27.318491319340296,
+      "pwm_command": 1491.4629714627063,
+      "pwm_expected": 1491.4629714627063
+    },
+    {
+      "timestamp": 7.666666666666667,
+      "target_x_px": 616.3990292331249,
+      "pixel_offset": -23.600970766875093,
+      "pwm_command": 1492.6246966353515,
+      "pwm_expected": 1492.6246966353515
+    },
+    {
+      "timestamp": 7.7,
+      "target_x_px": 617.5251372460037,
+      "pixel_offset": -22.474862753996263,
+      "pwm_command": 1492.9766053893761,
+      "pwm_expected": 1492.9766053893761
+    },
+    {
+      "timestamp": 7.733333333333333,
+      "target_x_px": 620.2771693084879,
+      "pixel_offset": -19.72283069151206,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.766666666666667,
+      "target_x_px": 623.0987500166883,
+      "pixel_offset": -16.901249983311686,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.8,
+      "target_x_px": 624.9847494261948,
+      "pixel_offset": -15.015250573805247,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.833333333333333,
+      "target_x_px": 627.5708074847574,
+      "pixel_offset": -12.429192515242562,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.866666666666666,
+      "target_x_px": 629.4090711355674,
+      "pixel_offset": -10.590928864432612,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.8999999999999995,
+      "target_x_px": 633.4474838567506,
+      "pixel_offset": -6.552516143249363,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.933333333333334,
+      "target_x_px": 635.3716118148612,
+      "pixel_offset": -4.6283881851387605,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 7.966666666666667,
+      "target_x_px": 639.0811070708943,
+      "pixel_offset": -0.9188929291057093,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.0,
+      "target_x_px": 639.9360412042596,
+      "pixel_offset": -0.06395879574040464,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.033333333333333,
+      "target_x_px": 641.6551101732045,
+      "pixel_offset": 1.6551101732045481,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.066666666666666,
+      "target_x_px": 644.5384912940244,
+      "pixel_offset": 4.538491294024425,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.1,
+      "target_x_px": 647.0517135578788,
+      "pixel_offset": 7.05171355787877,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.133333333333333,
+      "target_x_px": 650.6769041508695,
+      "pixel_offset": 10.676904150869518,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.166666666666666,
+      "target_x_px": 652.2876803460083,
+      "pixel_offset": 12.287680346008301,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.2,
+      "target_x_px": 654.7886841538239,
+      "pixel_offset": 14.788684153823851,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.233333333333333,
+      "target_x_px": 657.969895371968,
+      "pixel_offset": 17.96989537196805,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.266666666666666,
+      "target_x_px": 659.1480435895033,
+      "pixel_offset": 19.148043589503345,
+      "pwm_command": 1500.0,
+      "pwm_expected": 1500.0
+    },
+    {
+      "timestamp": 8.3,
+      "target_x_px": 661.6871908733076,
+      "pixel_offset": 21.6871908733076,
+      "pwm_command": 1506.7772471479086,
+      "pwm_expected": 1506.7772471479086
+    },
+    {
+      "timestamp": 8.333333333333334,
+      "target_x_px": 665.0464221070991,
+      "pixel_offset": 25.046422107099147,
+      "pwm_command": 1507.8270069084685,
+      "pwm_expected": 1507.8270069084685
+    },
+    {
+      "timestamp": 8.366666666666667,
+      "target_x_px": 666.3423828797572,
+      "pixel_offset": 26.342382879757224,
+      "pwm_command": 1508.2319946499242,
+      "pwm_expected": 1508.2319946499242
+    },
+    {
+      "timestamp": 8.4,
+      "target_x_px": 669.1746787154391,
+      "pixel_offset": 29.174678715439086,
+      "pwm_command": 1509.1170870985748,
+      "pwm_expected": 1509.1170870985748
+    },
+    {
+      "timestamp": 8.433333333333334,
+      "target_x_px": 671.6621363712139,
+      "pixel_offset": 31.662136371213933,
+      "pwm_command": 1509.8944176160044,
+      "pwm_expected": 1509.8944176160044
+    },
+    {
+      "timestamp": 8.466666666666667,
+      "target_x_px": 674.4409274806391,
+      "pixel_offset": 34.44092748063906,
+      "pwm_command": 1510.7627898376998,
+      "pwm_expected": 1510.7627898376998
+    },
+    {
+      "timestamp": 8.5,
+      "target_x_px": 677.0102284128899,
+      "pixel_offset": 37.01022841288989,
+      "pwm_command": 1511.5656963790282,
+      "pwm_expected": 1511.5656963790282
+    },
+    {
+      "timestamp": 8.533333333333333,
+      "target_x_px": 679.2138593099002,
+      "pixel_offset": 39.21385930990016,
+      "pwm_command": 1512.2543310343437,
+      "pwm_expected": 1512.2543310343437
+    },
+    {
+      "timestamp": 8.566666666666666,
+      "target_x_px": 681.5032810013824,
+      "pixel_offset": 41.50328100138245,
+      "pwm_command": 1512.969775312932,
+      "pwm_expected": 1512.969775312932
+    },
+    {
+      "timestamp": 8.6,
+      "target_x_px": 684.5004585938121,
+      "pixel_offset": 44.50045859381214,
+      "pwm_command": 1513.9063933105663,
+      "pwm_expected": 1513.9063933105663
+    },
+    {
+      "timestamp": 8.633333333333333,
+      "target_x_px": 686.7579994860479,
+      "pixel_offset": 46.75799948604788,
+      "pwm_command": 1514.6118748393899,
+      "pwm_expected": 1514.6118748393899
+    },
+    {
+      "timestamp": 8.666666666666666,
+      "target_x_px": 688.331964026106,
+      "pixel_offset": 48.33196402610599,
+      "pwm_command": 1515.1037387581582,
+      "pwm_expected": 1515.1037387581582
+    },
+    {
+      "timestamp": 8.7,
+      "target_x_px": 691.2936881205271,
+      "pixel_offset": 51.29368812052712,
+      "pwm_command": 1516.0292775376647,
+      "pwm_expected": 1516.0292775376647
+    },
+    {
+      "timestamp": 8.733333333333333,
+      "target_x_px": 693.701703755062,
+      "pixel_offset": 53.701703755062,
+      "pwm_command": 1516.781782423457,
+      "pwm_expected": 1516.781782423457
+    },
+    {
+      "timestamp": 8.766666666666666,
+      "target_x_px": 695.727895447725,
+      "pixel_offset": 55.72789544772502,
+      "pwm_command": 1517.4149673274142,
+      "pwm_expected": 1517.4149673274142
+    },
+    {
+      "timestamp": 8.8,
+      "target_x_px": 699.1298612508607,
+      "pixel_offset": 59.1298612508607,
+      "pwm_command": 1518.478081640894,
+      "pwm_expected": 1518.478081640894
+    },
+    {
+      "timestamp": 8.833333333333334,
+      "target_x_px": 701.777629562722,
+      "pixel_offset": 61.77762956272204,
+      "pwm_command": 1519.3055092383506,
+      "pwm_expected": 1519.3055092383506
+    },
+    {
+      "timestamp": 8.866666666666667,
+      "target_x_px": 703.8836267673431,
+      "pixel_offset": 63.88362676734312,
+      "pwm_command": 1519.9636333647948,
+      "pwm_expected": 1519.9636333647948
+    },
+    {
+      "timestamp": 8.9,
+      "target_x_px": 706.0490819460989,
+      "pixel_offset": 66.04908194609891,
+      "pwm_command": 1520.640338108156,
+      "pwm_expected": 1520.640338108156
+    },
+    {
+      "timestamp": 8.933333333333334,
+      "target_x_px": 708.4031266506914,
+      "pixel_offset": 68.40312665069143,
+      "pwm_command": 1521.375977078341,
+      "pwm_expected": 1521.375977078341
+    },
+    {
+      "timestamp": 8.966666666666667,
+      "target_x_px": 711.7948130712739,
+      "pixel_offset": 71.7948130712739,
+      "pwm_command": 1522.4358790847732,
+      "pwm_expected": 1522.4358790847732
+    },
+    {
+      "timestamp": 9.0,
+      "target_x_px": 714.1678460560325,
+      "pixel_offset": 74.16784605603254,
+      "pwm_command": 1523.1774518925101,
+      "pwm_expected": 1523.1774518925101
+    },
+    {
+      "timestamp": 9.033333333333333,
+      "target_x_px": 716.473235422291,
+      "pixel_offset": 76.47323542229105,
+      "pwm_command": 1523.897886069466,
+      "pwm_expected": 1523.897886069466
+    },
+    {
+      "timestamp": 9.066666666666666,
+      "target_x_px": 717.430844416603,
+      "pixel_offset": 77.43084441660301,
+      "pwm_command": 1524.1971388801885,
+      "pwm_expected": 1524.1971388801885
+    },
+    {
+      "timestamp": 9.1,
+      "target_x_px": 721.4135360635903,
+      "pixel_offset": 81.4135360635903,
+      "pwm_command": 1525.441730019872,
+      "pwm_expected": 1525.441730019872
+    },
+    {
+      "timestamp": 9.133333333333333,
+      "target_x_px": 723.7689062700189,
+      "pixel_offset": 83.76890627001887,
+      "pwm_command": 1526.177783209381,
+      "pwm_expected": 1526.177783209381
+    },
+    {
+      "timestamp": 9.166666666666666,
+      "target_x_px": 726.084961560403,
+      "pixel_offset": 86.08496156040303,
+      "pwm_command": 1526.9015504876259,
+      "pwm_expected": 1526.9015504876259
+    },
+    {
+      "timestamp": 9.2,
+      "target_x_px": 729.0838910308299,
+      "pixel_offset": 89.08389103082993,
+      "pwm_command": 1527.8387159471345,
+      "pwm_expected": 1527.8387159471345
+    },
+    {
+      "timestamp": 9.233333333333333,
+      "target_x_px": 731.1271346643708,
+      "pixel_offset": 91.12713466437083,
+      "pwm_command": 1528.4772295826158,
+      "pwm_expected": 1528.4772295826158
+    },
+    {
+      "timestamp": 9.266666666666666,
+      "target_x_px": 733.1728635546303,
+      "pixel_offset": 93.17286355463034,
+      "pwm_command": 1529.1165198608219,
+      "pwm_expected": 1529.1165198608219
+    },
+    {
+      "timestamp": 9.3,
+      "target_x_px": 736.0722260711891,
+      "pixel_offset": 96.0722260711891,
+      "pwm_command": 1530.0225706472465,
+      "pwm_expected": 1530.0225706472465
+    },
+    {
+      "timestamp": 9.333333333333334,
+      "target_x_px": 738.4782207617816,
+      "pixel_offset": 98.47822076178159,
+      "pwm_command": 1530.7744439880566,
+      "pwm_expected": 1530.7744439880566
+    },
+    {
+      "timestamp": 9.366666666666667,
+      "target_x_px": 741.2272290183826,
+      "pixel_offset": 101.22722901838256,
+      "pwm_command": 1531.6335090682446,
+      "pwm_expected": 1531.6335090682446
+    },
+    {
+      "timestamp": 9.4,
+      "target_x_px": 743.850606961082,
+      "pixel_offset": 103.85060696108201,
+      "pwm_command": 1532.453314675338,
+      "pwm_expected": 1532.453314675338
+    },
+    {
+      "timestamp": 9.433333333333334,
+      "target_x_px": 744.6892710657445,
+      "pixel_offset": 104.68927106574449,
+      "pwm_command": 1532.7153972080453,
+      "pwm_expected": 1532.7153972080453
+    },
+    {
+      "timestamp": 9.466666666666667,
+      "target_x_px": 747.2312707061537,
+      "pixel_offset": 107.23127070615374,
+      "pwm_command": 1533.509772095673,
+      "pwm_expected": 1533.509772095673
+    },
+    {
+      "timestamp": 9.5,
+      "target_x_px": 750.6342091895948,
+      "pixel_offset": 110.6342091895948,
+      "pwm_command": 1534.5731903717483,
+      "pwm_expected": 1534.5731903717483
+    },
+    {
+      "timestamp": 9.533333333333333,
+      "target_x_px": 753.2467970202155,
+      "pixel_offset": 113.24679702021547,
+      "pwm_command": 1535.3896240688173,
+      "pwm_expected": 1535.3896240688173
+    },
+    {
+      "timestamp": 9.566666666666666,
+      "target_x_px": 755.9563694572583,
+      "pixel_offset": 115.95636945725835,
+      "pwm_command": 1536.2363654553933,
+      "pwm_expected": 1536.2363654553933
+    },
+    {
+      "timestamp": 9.6,
+      "target_x_px": 758.1178072790543,
+      "pixel_offset": 118.11780727905432,
+      "pwm_command": 1536.9118147747045,
+      "pwm_expected": 1536.9118147747045
+    },
+    {
+      "timestamp": 9.633333333333333,
+      "target_x_px": 759.7190402104434,
+      "pixel_offset": 119.71904021044338,
+      "pwm_command": 1537.4122000657635,
+      "pwm_expected": 1537.4122000657635
+    },
+    {
+      "timestamp": 9.666666666666666,
+      "target_x_px": 763.0859148704138,
+      "pixel_offset": 123.08591487041383,
+      "pwm_command": 1538.4643483970044,
+      "pwm_expected": 1538.4643483970044
+    },
+    {
+      "timestamp": 9.7,
+      "target_x_px": 765.6913909330532,
+      "pixel_offset": 125.69139093305319,
+      "pwm_command": 1539.2785596665792,
+      "pwm_expected": 1539.2785596665792
+    },
+    {
+      "timestamp": 9.733333333333333,
+      "target_x_px": 767.9242664608626,
+      "pixel_offset": 127.92426646086255,
+      "pwm_command": 1539.9763332690195,
+      "pwm_expected": 1539.9763332690195
+    },
+    {
+      "timestamp": 9.766666666666666,
+      "target_x_px": 770.0619862168965,
+      "pixel_offset": 130.06198621689646,
+      "pwm_command": 1540.64437069278,
+      "pwm_expected": 1540.64437069278
+    },
+    {
+      "timestamp": 9.8,
+      "target_x_px": 773.1651679082721,
+      "pixel_offset": 133.1651679082721,
+      "pwm_command": 1541.614114971335,
+      "pwm_expected": 1541.614114971335
+    },
+    {
+      "timestamp": 9.833333333333334,
+      "target_x_px": 775.2441164519431,
+      "pixel_offset": 135.2441164519431,
+      "pwm_command": 1542.2637863912323,
+      "pwm_expected": 1542.2637863912323
+    },
+    {
+      "timestamp": 9.866666666666667,
+      "target_x_px": 777.9061565795399,
+      "pixel_offset": 137.90615657953992,
+      "pwm_command": 1543.0956739311061,
+      "pwm_expected": 1543.0956739311061
+    },
+    {
+      "timestamp": 9.9,
+      "target_x_px": 780.6437699721289,
+      "pixel_offset": 140.6437699721289,
+      "pwm_command": 1543.9511781162903,
+      "pwm_expected": 1543.9511781162903
+    },
+    {
+      "timestamp": 9.933333333333334,
+      "target_x_px": 782.4483958656867,
+      "pixel_offset": 142.44839586568673,
+      "pwm_command": 1544.5151237080272,
+      "pwm_expected": 1544.5151237080272
+    },
+    {
+      "timestamp": 9.966666666666667,
+      "target_x_px": 784.8195200366285,
+      "pixel_offset": 144.81952003662855,
+      "pwm_command": 1545.2561000114465,
+      "pwm_expected": 1545.2561000114465
+    },
+    {
+      "timestamp": 10.0,
+      "target_x_px": 787.8784943083227,
+      "pixel_offset": 147.87849430832273,
+      "pwm_command": 1546.212029471351,
+      "pwm_expected": 1546.212029471351
+    },
+    {
+      "timestamp": 10.033333333333333,
+      "target_x_px": 790.3931362933862,
+      "pixel_offset": 150.3931362933862,
+      "pwm_command": 1546.9978550916833,
+      "pwm_expected": 1546.9978550916833
+    },
+    {
+      "timestamp": 10.066666666666666,
+      "target_x_px": 792.6233841182785,
+      "pixel_offset": 152.62338411827852,
+      "pwm_command": 1547.6948075369621,
+      "pwm_expected": 1547.6948075369621
+    },
+    {
+      "timestamp": 10.1,
+      "target_x_px": 794.4881054004483,
+      "pixel_offset": 154.48810540044826,
+      "pwm_command": 1548.27753293764,
+      "pwm_expected": 1548.27753293764
+    },
+    {
+      "timestamp": 10.133333333333333,
+      "target_x_px": 796.4439732088811,
+      "pixel_offset": 156.44397320888106,
+      "pwm_command": 1548.8887416277753,
+      "pwm_expected": 1548.8887416277753
+    },
+    {
+      "timestamp": 10.166666666666666,
+      "target_x_px": 800.1188494948436,
+      "pixel_offset": 160.11884949484363,
+      "pwm_command": 1550.0371404671387,
+      "pwm_expected": 1550.0371404671387
+    },
+    {
+      "timestamp": 10.2,
+      "target_x_px": 802.3899843131599,
+      "pixel_offset": 162.38998431315986,
+      "pwm_command": 1550.7468700978625,
+      "pwm_expected": 1550.7468700978625
+    },
+    {
+      "timestamp": 10.233333333333333,
+      "target_x_px": 805.9312093231416,
+      "pixel_offset": 165.93120932314162,
+      "pwm_command": 1551.8535029134819,
+      "pwm_expected": 1551.8535029134819
+    },
+    {
+      "timestamp": 10.266666666666666,
+      "target_x_px": 807.2213640639691,
+      "pixel_offset": 167.22136406396908,
+      "pwm_command": 1552.2566762699903,
+      "pwm_expected": 1552.2566762699903
+    },
+    {
+      "timestamp": 10.3,
+      "target_x_px": 809.8655046158683,
+      "pixel_offset": 169.8655046158683,
+      "pwm_command": 1553.0829701924588,
+      "pwm_expected": 1553.0829701924588
+    },
+    {
+      "timestamp": 10.333333333333334,
+      "target_x_px": 811.6880961056107,
+      "pixel_offset": 171.68809610561073,
+      "pwm_command": 1553.6525300330034,
+      "pwm_expected": 1553.6525300330034
+    },
+    {
+      "timestamp": 10.366666666666667,
+      "target_x_px": 815.4826789149042,
+      "pixel_offset": 175.48267891490423,
+      "pwm_command": 1554.8383371609075,
+      "pwm_expected": 1554.8383371609075
+    },
+    {
+      "timestamp": 10.4,
+      "target_x_px": 817.7965933133197,
+      "pixel_offset": 177.7965933133197,
+      "pwm_command": 1555.5614354104125,
+      "pwm_expected": 1555.5614354104125
+    },
+    {
+      "timestamp": 10.433333333333334,
+      "target_x_px": 818.9635309232041,
+      "pixel_offset": 178.96353092320408,
+      "pwm_command": 1555.9261034135013,
+      "pwm_expected": 1555.9261034135013
+    },
+    {
+      "timestamp": 10.466666666666667,
+      "target_x_px": 821.944529122811,
+      "pixel_offset": 181.944529122811,
+      "pwm_command": 1556.8576653508785,
+      "pwm_expected": 1556.8576653508785
+    },
+    {
+      "timestamp": 10.5,
+      "target_x_px": 823.5287676851426,
+      "pixel_offset": 183.5287676851426,
+      "pwm_command": 1557.352739901607,
+      "pwm_expected": 1557.352739901607
+    },
+    {
+      "timestamp": 10.533333333333333,
+      "target_x_px": 826.7543293840439,
+      "pixel_offset": 186.7543293840439,
+      "pwm_command": 1558.3607279325138,
+      "pwm_expected": 1558.3607279325138
+    },
+    {
+      "timestamp": 10.566666666666666,
+      "target_x_px": 828.7856144790366,
+      "pixel_offset": 188.78561447903655,
+      "pwm_command": 1558.9955045246988,
+      "pwm_expected": 1558.9955045246988
+    },
+    {
+      "timestamp": 10.6,
+      "target_x_px": 832.1615852919809,
+      "pixel_offset": 192.16158529198094,
+      "pwm_command": 1560.050495403744,
+      "pwm_expected": 1560.050495403744
+    },
+    {
+      "timestamp": 10.633333333333333,
+      "target_x_px": 833.5633528834627,
+      "pixel_offset": 193.5633528834627,
+      "pwm_command": 1560.488547776082,
+      "pwm_expected": 1560.488547776082
+    },
+    {
+      "timestamp": 10.666666666666666,
+      "target_x_px": 836.4987743170216,
+      "pixel_offset": 196.49877431702157,
+      "pwm_command": 1561.4058669740693,
+      "pwm_expected": 1561.4058669740693
+    },
+    {
+      "timestamp": 10.7,
+      "target_x_px": 838.9952043243183,
+      "pixel_offset": 198.99520432431825,
+      "pwm_command": 1562.1860013513494,
+      "pwm_expected": 1562.1860013513494
+    },
+    {
+      "timestamp": 10.733333333333333,
+      "target_x_px": 841.4604618012903,
+      "pixel_offset": 201.4604618012903,
+      "pwm_command": 1562.9563943129033,
+      "pwm_expected": 1562.9563943129033
+    },
+    {
+      "timestamp": 10.766666666666666,
+      "target_x_px": 842.6932233451959,
+      "pixel_offset": 202.69322334519586,
+      "pwm_command": 1563.3416322953738,
+      "pwm_expected": 1563.3416322953738
+    },
+    {
+      "timestamp": 10.8,
+      "target_x_px": 846.3845327348956,
+      "pixel_offset": 206.38453273489563,
+      "pwm_command": 1564.495166479655,
+      "pwm_expected": 1564.495166479655
+    },
+    {
+      "timestamp": 10.833333333333334,
+      "target_x_px": 849.8828113808061,
+      "pixel_offset": 209.88281138080606,
+      "pwm_command": 1565.588378556502,
+      "pwm_expected": 1565.588378556502
+    },
+    {
+      "timestamp": 10.866666666666667,
+      "target_x_px": 851.2822223213893,
+      "pixel_offset": 211.28222232138933,
+      "pwm_command": 1566.0256944754342,
+      "pwm_expected": 1566.0256944754342
+    },
+    {
+      "timestamp": 10.9,
+      "target_x_px": 855.1616799016249,
+      "pixel_offset": 215.1616799016249,
+      "pwm_command": 1567.2380249692578,
+      "pwm_expected": 1567.2380249692578
+    },
+    {
+      "timestamp": 10.933333333333334,
+      "target_x_px": 856.3402979792899,
+      "pixel_offset": 216.34029797928986,
+      "pwm_command": 1567.606343118528,
+      "pwm_expected": 1567.606343118528
+    },
+    {
+      "timestamp": 10.966666666666667,
+      "target_x_px": 858.8907090470506,
+      "pixel_offset": 218.89070904705056,
+      "pwm_command": 1568.4033465772034,
+      "pwm_expected": 1568.4033465772034
+    },
+    {
+      "timestamp": 11.0,
+      "target_x_px": 860.9631689965598,
+      "pixel_offset": 220.96316899655983,
+      "pwm_command": 1569.050990311425,
+      "pwm_expected": 1569.050990311425
+    },
+    {
+      "timestamp": 11.033333333333333,
+      "target_x_px": 863.6919566982253,
+      "pixel_offset": 223.69195669822534,
+      "pwm_command": 1569.9037364681953,
+      "pwm_expected": 1569.9037364681953
+    },
+    {
+      "timestamp": 11.066666666666666,
+      "target_x_px": 865.810243775328,
+      "pixel_offset": 225.810243775328,
+      "pwm_command": 1570.56570117979,
+      "pwm_expected": 1570.56570117979
+    },
+    {
+      "timestamp": 11.1,
+      "target_x_px": 868.4975113912895,
+      "pixel_offset": 228.49751139128955,
+      "pwm_command": 1571.405472309778,
+      "pwm_expected": 1571.405472309778
+    },
+    {
+      "timestamp": 11.133333333333333,
+      "target_x_px": 869.7578484291367,
+      "pixel_offset": 229.75784842913674,
+      "pwm_command": 1571.7993276341053,
+      "pwm_expected": 1571.7993276341053
+    },
+    {
+      "timestamp": 11.166666666666666,
+      "target_x_px": 874.1647092629155,
+      "pixel_offset": 234.1647092629155,
+      "pwm_command": 1573.176471644661,
+      "pwm_expected": 1573.176471644661
+    },
+    {
+      "timestamp": 11.2,
+      "target_x_px": 875.8286562029598,
+      "pixel_offset": 235.8286562029598,
+      "pwm_command": 1573.696455063425,
+      "pwm_expected": 1573.696455063425
+    },
+    {
+      "timestamp": 11.233333333333333,
+      "target_x_px": 877.7545774859743,
+      "pixel_offset": 237.75457748597432,
+      "pwm_command": 1574.2983054643669,
+      "pwm_expected": 1574.2983054643669
+    },
+    {
+      "timestamp": 11.266666666666666,
+      "target_x_px": 880.3613787439338,
+      "pixel_offset": 240.36137874393376,
+      "pwm_command": 1575.1129308574793,
+      "pwm_expected": 1575.1129308574793
+    },
+    {
+      "timestamp": 11.3,
+      "target_x_px": 883.8428391965738,
+      "pixel_offset": 243.84283919657378,
+      "pwm_command": 1576.2008872489293,
+      "pwm_expected": 1576.2008872489293
+    },
+    {
+      "timestamp": 11.333333333333334,
+      "target_x_px": 886.194169365355,
+      "pixel_offset": 246.19416936535504,
+      "pwm_command": 1576.9356779266734,
+      "pwm_expected": 1576.9356779266734
+    },
+    {
+      "timestamp": 11.366666666666667,
+      "target_x_px": 888.0294065335269,
+      "pixel_offset": 248.02940653352687,
+      "pwm_command": 1577.5091895417272,
+      "pwm_expected": 1577.5091895417272
+    },
+    {
+      "timestamp": 11.4,
+      "target_x_px": 890.1389360955541,
+      "pixel_offset": 250.13893609555407,
+      "pwm_command": 1578.1684175298606,
+      "pwm_expected": 1578.1684175298606
+    },
+    {
+      "timestamp": 11.433333333333334,
+      "target_x_px": 893.0881706342543,
+      "pixel_offset": 253.0881706342543,
+      "pwm_command": 1579.0900533232045,
+      "pwm_expected": 1579.0900533232045
+    },
+    {
+      "timestamp": 11.466666666666667,
+      "target_x_px": 896.0221466507684,
+      "pixel_offset": 256.0221466507684,
+      "pwm_command": 1580.006920828365,
+      "pwm_expected": 1580.006920828365
+    },
+    {
+      "timestamp": 11.5,
+      "target_x_px": 897.9445169170905,
+      "pixel_offset": 257.9445169170905,
+      "pwm_command": 1580.6076615365907,
+      "pwm_expected": 1580.6076615365907
+    },
+    {
+      "timestamp": 11.533333333333333,
+      "target_x_px": 900.0428016695334,
+      "pixel_offset": 260.04280166953345,
+      "pwm_command": 1581.2633755217291,
+      "pwm_expected": 1581.2633755217291
+    },
+    {
+      "timestamp": 11.566666666666666,
+      "target_x_px": 903.3382172956508,
+      "pixel_offset": 263.3382172956508,
+      "pwm_command": 1582.293192904891,
+      "pwm_expected": 1582.293192904891
+    },
+    {
+      "timestamp": 11.6,
+      "target_x_px": 905.6630665111211,
+      "pixel_offset": 265.6630665111211,
+      "pwm_command": 1583.0197082847253,
+      "pwm_expected": 1583.0197082847253
+    },
+    {
+      "timestamp": 11.633333333333333,
+      "target_x_px": 908.4203468429367,
+      "pixel_offset": 268.42034684293674,
+      "pwm_command": 1583.8813583884178,
+      "pwm_expected": 1583.8813583884178
+    },
+    {
+      "timestamp": 11.666666666666666,
+      "target_x_px": 910.155305156407,
+      "pixel_offset": 270.15530515640705,
+      "pwm_command": 1584.4235328613772,
+      "pwm_expected": 1584.4235328613772
+    },
+    {
+      "timestamp": 11.7,
+      "target_x_px": 912.5228281547286,
+      "pixel_offset": 272.5228281547286,
+      "pwm_command": 1585.1633837983527,
+      "pwm_expected": 1585.1633837983527
+    },
+    {
+      "timestamp": 11.733333333333333,
+      "target_x_px": 914.5550187465712,
+      "pixel_offset": 274.55501874657125,
+      "pwm_command": 1585.7984433583035,
+      "pwm_expected": 1585.7984433583035
+    },
+    {
+      "timestamp": 11.766666666666666,
+      "target_x_px": 917.1514519904185,
+      "pixel_offset": 277.15145199041854,
+      "pwm_command": 1586.6098287470058,
+      "pwm_expected": 1586.6098287470058
+    },
+    {
+      "timestamp": 11.8,
+      "target_x_px": 919.2090352960581,
+      "pixel_offset": 279.2090352960581,
+      "pwm_command": 1587.252823530018,
+      "pwm_expected": 1587.252823530018
+    },
+    {
+      "timestamp": 11.833333333333334,
+      "target_x_px": 922.8138420669346,
+      "pixel_offset": 282.8138420669346,
+      "pwm_command": 1588.379325645917,
+      "pwm_expected": 1588.379325645917
+    },
+    {
+      "timestamp": 11.866666666666667,
+      "target_x_px": 924.8942071232623,
+      "pixel_offset": 284.8942071232623,
+      "pwm_command": 1589.0294397260195,
+      "pwm_expected": 1589.0294397260195
+    },
+    {
+      "timestamp": 11.9,
+      "target_x_px": 927.6061826487876,
+      "pixel_offset": 287.6061826487876,
+      "pwm_command": 1589.876932077746,
+      "pwm_expected": 1589.876932077746
+    },
+    {
+      "timestamp": 11.933333333333334,
+      "target_x_px": 930.1404471576644,
+      "pixel_offset": 290.1404471576644,
+      "pwm_command": 1590.66888973677,
+      "pwm_expected": 1590.66888973677
+    },
+    {
+      "timestamp": 11.966666666666667,
+      "target_x_px": 932.3598605605597,
+      "pixel_offset": 292.3598605605597,
+      "pwm_command": 1591.362456425175,
+      "pwm_expected": 1591.362456425175
+    },
+    {
+      "timestamp": 12.0,
+      "target_x_px": 935.153900884446,
+      "pixel_offset": 295.153900884446,
+      "pwm_command": 1592.2355940263894,
+      "pwm_expected": 1592.2355940263894
+    },
+    {
+      "timestamp": 12.033333333333333,
+      "target_x_px": 936.7842406222805,
+      "pixel_offset": 296.78424062228055,
+      "pwm_command": 1592.7450751944627,
+      "pwm_expected": 1592.7450751944627
+    },
+    {
+      "timestamp": 12.066666666666666,
+      "target_x_px": 940.0020993857306,
+      "pixel_offset": 300.0020993857306,
+      "pwm_command": 1593.750656058041,
+      "pwm_expected": 1593.750656058041
+    },
+    {
+      "timestamp": 12.1,
+      "target_x_px": 942.3842169665327,
+      "pixel_offset": 302.3842169665327,
+      "pwm_command": 1594.4950678020414,
+      "pwm_expected": 1594.4950678020414
+    },
+    {
+      "timestamp": 12.133333333333333,
+      "target_x_px": 944.5634534931786,
+      "pixel_offset": 304.5634534931786,
+      "pwm_command": 1595.1760792166183,
+      "pwm_expected": 1595.1760792166183
+    },
+    {
+      "timestamp": 12.166666666666666,
+      "target_x_px": 947.3895892942155,
+      "pixel_offset": 307.3895892942155,
+      "pwm_command": 1596.0592466544424,
+      "pwm_expected": 1596.0592466544424
+    },
+    {
+      "timestamp": 12.2,
+      "target_x_px": 949.9541263778573,
+      "pixel_offset": 309.9541263778573,
+      "pwm_command": 1596.8606644930803,
+      "pwm_expected": 1596.8606644930803
+    },
+    {
+      "timestamp": 12.233333333333333,
+      "target_x_px": 952.7229111519961,
+      "pixel_offset": 312.7229111519961,
+      "pwm_command": 1597.7259097349988,
+      "pwm_expected": 1597.7259097349988
+    },
+    {
+      "timestamp": 12.266666666666666,
+      "target_x_px": 954.7946815338236,
+      "pixel_offset": 314.79468153382356,
+      "pwm_command": 1598.3733379793198,
+      "pwm_expected": 1598.3733379793198
+    },
+    {
+      "timestamp": 12.3,
+      "target_x_px": 957.9577372222313,
+      "pixel_offset": 317.95773722223134,
+      "pwm_command": 1599.3617928819474,
+      "pwm_expected": 1599.3617928819474
+    },
+    {
+      "timestamp": 12.333333333333334,
+      "target_x_px": 958.6628962176676,
+      "pixel_offset": 318.6628962176676,
+      "pwm_command": 1599.5821550680212,
+      "pwm_expected": 1599.5821550680212
+    },
+    {
+      "timestamp": 12.366666666666667,
+      "target_x_px": 961.729257377819,
+      "pixel_offset": 321.72925737781895,
+      "pwm_command": 1600.5403929305685,
+      "pwm_expected": 1600.5403929305685
+    },
+    {
+      "timestamp": 12.4,
+      "target_x_px": 964.7588295102346,
+      "pixel_offset": 324.7588295102346,
+      "pwm_command": 1601.4871342219483,
+      "pwm_expected": 1601.4871342219483
+    },
+    {
+      "timestamp": 12.433333333333334,
+      "target_x_px": 967.051716715572,
+      "pixel_offset": 327.05171671557196,
+      "pwm_command": 1602.2036614736162,
+      "pwm_expected": 1602.2036614736162
+    },
+    {
+      "timestamp": 12.466666666666667,
+      "target_x_px": 969.1109077651706,
+      "pixel_offset": 329.1109077651706,
+      "pwm_command": 1602.847158676616,
+      "pwm_expected": 1602.847158676616
+    },
+    {
+      "timestamp": 12.5,
+      "target_x_px": 971.4133833769446,
+      "pixel_offset": 331.4133833769446,
+      "pwm_command": 1603.5666823052952,
+      "pwm_expected": 1603.5666823052952
+    },
+    {
+      "timestamp": 12.533333333333333,
+      "target_x_px": 973.8453967068447,
+      "pixel_offset": 333.84539670684467,
+      "pwm_command": 1604.326686470889,
+      "pwm_expected": 1604.326686470889
+    },
+    {
+      "timestamp": 12.566666666666666,
+      "target_x_px": 976.3169672222507,
+      "pixel_offset": 336.3169672222507,
+      "pwm_command": 1605.0990522569534,
+      "pwm_expected": 1605.0990522569534
+    },
+    {
+      "timestamp": 12.6,
+      "target_x_px": 979.4966589504404,
+      "pixel_offset": 339.4966589504404,
+      "pwm_command": 1606.0927059220126,
+      "pwm_expected": 1606.0927059220126
+    },
+    {
+      "timestamp": 12.633333333333333,
+      "target_x_px": 981.2791544432426,
+      "pixel_offset": 341.27915444324265,
+      "pwm_command": 1606.6497357635133,
+      "pwm_expected": 1606.6497357635133
+    },
+    {
+      "timestamp": 12.666666666666666,
+      "target_x_px": 983.8788477535477,
+      "pixel_offset": 343.8788477535477,
+      "pwm_command": 1607.4621399229836,
+      "pwm_expected": 1607.4621399229836
+    },
+    {
+      "timestamp": 12.7,
+      "target_x_px": 987.9050422691344,
+      "pixel_offset": 347.90504226913436,
+      "pwm_command": 1608.7203257091046,
+      "pwm_expected": 1608.7203257091046
+    },
+    {
+      "timestamp": 12.733333333333333,
+      "target_x_px": 989.6579699964761,
+      "pixel_offset": 349.65796999647614,
+      "pwm_command": 1609.268115623899,
+      "pwm_expected": 1609.268115623899
+    },
+    {
+      "timestamp": 12.766666666666666,
+      "target_x_px": 991.5241724214181,
+      "pixel_offset": 351.52417242141814,
+      "pwm_command": 1609.8513038816932,
+      "pwm_expected": 1609.8513038816932
+    },
+    {
+      "timestamp": 12.8,
+      "target_x_px": 993.6865164711061,
+      "pixel_offset": 353.6865164711061,
+      "pwm_command": 1610.5270363972206,
+      "pwm_expected": 1610.5270363972206
+    },
+    {
+      "timestamp": 12.833333333333334,
+      "target_x_px": 996.8122093010611,
+      "pixel_offset": 356.8122093010611,
+      "pwm_command": 1611.5038154065817,
+      "pwm_expected": 1611.5038154065817
+    },
+    {
+      "timestamp": 12.866666666666667,
+      "target_x_px": 999.2328705361945,
+      "pixel_offset": 359.23287053619447,
+      "pwm_command": 1612.2602720425607,
+      "pwm_expected": 1612.2602720425607
+    },
+    {
+      "timestamp": 12.9,
+      "target_x_px": 1001.6859049811086,
+      "pixel_offset": 361.6859049811086,
+      "pwm_command": 1613.0268453065964,
+      "pwm_expected": 1613.0268453065964
+    },
+    {
+      "timestamp": 12.933333333333334,
+      "target_x_px": 1003.4697647454209,
+      "pixel_offset": 363.4697647454209,
+      "pwm_command": 1613.584301482944,
+      "pwm_expected": 1613.584301482944
+    },
+    {
+      "timestamp": 12.966666666666667,
+      "target_x_px": 1006.2544499521166,
+      "pixel_offset": 366.2544499521166,
+      "pwm_command": 1614.4545156100364,
+      "pwm_expected": 1614.4545156100364
+    },
+    {
+      "timestamp": 13.0,
+      "target_x_px": 1008.8388505004666,
+      "pixel_offset": 368.8388505004666,
+      "pwm_command": 1615.2621407813958,
+      "pwm_expected": 1615.2621407813958
+    },
+    {
+      "timestamp": 13.033333333333333,
+      "target_x_px": 1011.3984322588364,
+      "pixel_offset": 371.39843225883635,
+      "pwm_command": 1616.0620100808865,
+      "pwm_expected": 1616.0620100808865
+    },
+    {
+      "timestamp": 13.066666666666666,
+      "target_x_px": 1013.9465618906321,
+      "pixel_offset": 373.9465618906321,
+      "pwm_command": 1616.8583005908226,
+      "pwm_expected": 1616.8583005908226
+    },
+    {
+      "timestamp": 13.1,
+      "target_x_px": 1016.5419610772744,
+      "pixel_offset": 376.54196107727444,
+      "pwm_command": 1617.6693628366484,
+      "pwm_expected": 1617.6693628366484
+    },
+    {
+      "timestamp": 13.133333333333333,
+      "target_x_px": 1018.5482504776039,
+      "pixel_offset": 378.5482504776039,
+      "pwm_command": 1618.2963282742512,
+      "pwm_expected": 1618.2963282742512
+    },
+    {
+      "timestamp": 13.166666666666666,
+      "target_x_px": 1021.256475776233,
+      "pixel_offset": 381.25647577623295,
+      "pwm_command": 1619.1426486800729,
+      "pwm_expected": 1619.1426486800729
+    },
+    {
+      "timestamp": 13.2,
+      "target_x_px": 1023.6357894185977,
+      "pixel_offset": 383.6357894185977,
+      "pwm_command": 1619.8861841933117,
+      "pwm_expected": 1619.8861841933117
+    },
+    {
+      "timestamp": 13.233333333333333,
+      "target_x_px": 1025.4178050631292,
+      "pixel_offset": 385.4178050631292,
+      "pwm_command": 1620.443064082228,
+      "pwm_expected": 1620.443064082228
+    },
+    {
+      "timestamp": 13.266666666666666,
+      "target_x_px": 1028.3968890897381,
+      "pixel_offset": 388.3968890897381,
+      "pwm_command": 1621.3740278405432,
+      "pwm_expected": 1621.3740278405432
+    },
+    {
+      "timestamp": 13.299999999999999,
+      "target_x_px": 1030.8891591880652,
+      "pixel_offset": 390.88915918806515,
+      "pwm_command": 1622.1528622462704,
+      "pwm_expected": 1622.1528622462704
+    },
+    {
+      "timestamp": 13.333333333333334,
+      "target_x_px": 1033.8024752363215,
+      "pixel_offset": 393.80247523632147,
+      "pwm_command": 1623.0632735113504,
+      "pwm_expected": 1623.0632735113504
+    },
+    {
+      "timestamp": 13.366666666666667,
+      "target_x_px": 1035.8397270551372,
+      "pixel_offset": 395.83972705513725,
+      "pwm_command": 1623.6999147047304,
+      "pwm_expected": 1623.6999147047304
+    },
+    {
+      "timestamp": 13.4,
+      "target_x_px": 1038.032751886284,
+      "pixel_offset": 398.0327518862839,
+      "pwm_command": 1624.3852349644637,
+      "pwm_expected": 1624.3852349644637
+    },
+    {
+      "timestamp": 13.433333333333334,
+      "target_x_px": 1040.8194002191503,
+      "pixel_offset": 400.81940021915034,
+      "pwm_command": 1625.2560625684844,
+      "pwm_expected": 1625.2560625684844
+    },
+    {
+      "timestamp": 13.466666666666667,
+      "target_x_px": 1043.7945447294533,
+      "pixel_offset": 403.79454472945326,
+      "pwm_command": 1626.1857952279543,
+      "pwm_expected": 1626.1857952279543
+    },
+    {
+      "timestamp": 13.5,
+      "target_x_px": 1045.5315641779193,
+      "pixel_offset": 405.53156417791934,
+      "pwm_command": 1626.7286138055997,
+      "pwm_expected": 1626.7286138055997
+    },
+    {
+      "timestamp": 13.533333333333333,
+      "target_x_px": 1048.8068222755103,
+      "pixel_offset": 408.8068222755103,
+      "pwm_command": 1627.752131961097,
+      "pwm_expected": 1627.752131961097
+    },
+    {
+      "timestamp": 13.566666666666666,
+      "target_x_px": 1051.0575889364009,
+      "pixel_offset": 411.05758893640086,
+      "pwm_command": 1628.4554965426253,
+      "pwm_expected": 1628.4554965426253
+    },
+    {
+      "timestamp": 13.6,
+      "target_x_px": 1053.1335251329347,
+      "pixel_offset": 413.13352513293466,
+      "pwm_command": 1629.1042266040422,
+      "pwm_expected": 1629.1042266040422
+    },
+    {
+      "timestamp": 13.633333333333333,
+      "target_x_px": 1055.499475327971,
+      "pixel_offset": 415.4994753279709,
+      "pwm_command": 1629.843586039991,
+      "pwm_expected": 1629.843586039991
+    },
+    {
+      "timestamp": 13.666666666666666,
+      "target_x_px": 1057.6580224416164,
+      "pixel_offset": 417.65802244161637,
+      "pwm_command": 1630.518132013005,
+      "pwm_expected": 1630.518132013005
+    },
+    {
+      "timestamp": 13.7,
+      "target_x_px": 1061.5244490618097,
+      "pixel_offset": 421.5244490618097,
+      "pwm_command": 1631.7263903318155,
+      "pwm_expected": 1631.7263903318155
+    },
+    {
+      "timestamp": 13.733333333333333,
+      "target_x_px": 1062.610582072633,
+      "pixel_offset": 422.61058207263295,
+      "pwm_command": 1632.0658068976977,
+      "pwm_expected": 1632.0658068976977
+    },
+    {
+      "timestamp": 13.766666666666666,
+      "target_x_px": 1066.0814527395319,
+      "pixel_offset": 426.08145273953187,
+      "pwm_command": 1633.1504539811037,
+      "pwm_expected": 1633.1504539811037
+    },
+    {
+      "timestamp": 13.799999999999999,
+      "target_x_px": 1067.539906591452,
+      "pixel_offset": 427.5399065914521,
+      "pwm_command": 1633.6062208098288,
+      "pwm_expected": 1633.6062208098288
+    },
+    {
+      "timestamp": 13.833333333333334,
+      "target_x_px": 1069.5361080778164,
+      "pixel_offset": 429.5361080778164,
+      "pwm_command": 1634.2300337743177,
+      "pwm_expected": 1634.2300337743177
+    },
+    {
+      "timestamp": 13.866666666666667,
+      "target_x_px": 1072.1645962832906,
+      "pixel_offset": 432.1645962832906,
+      "pwm_command": 1635.0514363385282,
+      "pwm_expected": 1635.0514363385282
+    },
+    {
+      "timestamp": 13.9,
+      "target_x_px": 1075.1076575563065,
+      "pixel_offset": 435.10765755630655,
+      "pwm_command": 1635.9711429863457,
+      "pwm_expected": 1635.9711429863457
+    },
+    {
+      "timestamp": 13.933333333333334,
+      "target_x_px": 1078.3585835797403,
+      "pixel_offset": 438.3585835797403,
+      "pwm_command": 1636.987057368669,
+      "pwm_expected": 1636.987057368669
+    },
+    {
+      "timestamp": 13.966666666666667,
+      "target_x_px": 1080.533827865905,
+      "pixel_offset": 440.5338278659051,
+      "pwm_command": 1637.6668212080954,
+      "pwm_expected": 1637.6668212080954
+    },
+    {
+      "timestamp": 14.0,
+      "target_x_px": 1082.4752681451737,
+      "pixel_offset": 442.4752681451737,
+      "pwm_command": 1638.2735212953667,
+      "pwm_expected": 1638.2735212953667
+    },
+    {
+      "timestamp": 14.033333333333333,
+      "target_x_px": 1084.396972322552,
+      "pixel_offset": 444.3969723225521,
+      "pwm_command": 1638.8740538507975,
+      "pwm_expected": 1638.8740538507975
+    },
+    {
+      "timestamp": 14.066666666666666,
+      "target_x_px": 1087.4998927707732,
+      "pixel_offset": 447.49989277077316,
+      "pwm_command": 1639.8437164908667,
+      "pwm_expected": 1639.8437164908667
+    },
+    {
+      "timestamp": 14.1,
+      "target_x_px": 1090.019584321954,
+      "pixel_offset": 450.01958432195397,
+      "pwm_command": 1640.6311201006106,
+      "pwm_expected": 1640.6311201006106
+    },
+    {
+      "timestamp": 14.133333333333333,
+      "target_x_px": 1092.0144633412076,
+      "pixel_offset": 452.0144633412076,
+      "pwm_command": 1641.2545197941274,
+      "pwm_expected": 1641.2545197941274
+    },
+    {
+      "timestamp": 14.166666666666666,
+      "target_x_px": 1094.4800964034541,
+      "pixel_offset": 454.4800964034541,
+      "pwm_command": 1642.0250301260794,
+      "pwm_expected": 1642.0250301260794
+    },
+    {
+      "timestamp": 14.2,
+      "target_x_px": 1096.9313064363466,
+      "pixel_offset": 456.93130643634663,
+      "pwm_command": 1642.7910332613583,
+      "pwm_expected": 1642.7910332613583
+    },
+    {
+      "timestamp": 14.233333333333333,
+      "target_x_px": 1100.4185854573282,
+      "pixel_offset": 460.41858545732816,
+      "pwm_command": 1643.880807955415,
+      "pwm_expected": 1643.880807955415
+    },
+    {
+      "timestamp": 14.266666666666666,
+      "target_x_px": 1101.7504888801143,
+      "pixel_offset": 461.7504888801143,
+      "pwm_command": 1644.2970277750358,
+      "pwm_expected": 1644.2970277750358
+    },
+    {
+      "timestamp": 14.299999999999999,
+      "target_x_px": 1104.3488884778594,
+      "pixel_offset": 464.3488884778594,
+      "pwm_command": 1645.109027649331,
+      "pwm_expected": 1645.109027649331
+    },
+    {
+      "timestamp": 14.333333333333334,
+      "target_x_px": 1107.1847948437592,
+      "pixel_offset": 467.18479484375916,
+      "pwm_command": 1645.9952483886748,
+      "pwm_expected": 1645.9952483886748
+    },
+    {
+      "timestamp": 14.366666666666667,
+      "target_x_px": 1110.3154192673317,
+      "pixel_offset": 470.31541926733166,
+      "pwm_command": 1646.9735685210412,
+      "pwm_expected": 1646.9735685210412
+    },
+    {
+      "timestamp": 14.4,
+      "target_x_px": 1111.693605654758,
+      "pixel_offset": 471.6936056547579,
+      "pwm_command": 1647.4042517671119,
+      "pwm_expected": 1647.4042517671119
+    },
+    {
+      "timestamp": 14.433333333333334,
+      "target_x_px": 1114.6012660286958,
+      "pixel_offset": 474.6012660286958,
+      "pwm_command": 1648.3128956339674,
+      "pwm_expected": 1648.3128956339674
+    },
+    {
+      "timestamp": 14.466666666666667,
+      "target_x_px": 1117.2459388030031,
+      "pixel_offset": 477.2459388030031,
+      "pwm_command": 1649.1393558759385,
+      "pwm_expected": 1649.1393558759385
+    },
+    {
+      "timestamp": 14.5,
+      "target_x_px": 1119.286526386253,
+      "pixel_offset": 479.28652638625294,
+      "pwm_command": 1649.777039495704,
+      "pwm_expected": 1649.777039495704
+    },
+    {
+      "timestamp": 14.533333333333333,
+      "target_x_px": 1121.143673719326,
+      "pixel_offset": 481.143673719326,
+      "pwm_command": 1650.3573980372894,
+      "pwm_expected": 1650.3573980372894
+    },
+    {
+      "timestamp": 14.566666666666666,
+      "target_x_px": 1124.2751031802297,
+      "pixel_offset": 484.27510318022973,
+      "pwm_command": 1651.3359697438218,
+      "pwm_expected": 1651.3359697438218
+    },
+    {
+      "timestamp": 14.6,
+      "target_x_px": 1126.491194350482,
+      "pixel_offset": 486.4911943504819,
+      "pwm_command": 1652.0284982345256,
+      "pwm_expected": 1652.0284982345256
+    },
+    {
+      "timestamp": 14.633333333333333,
+      "target_x_px": 1129.200121885297,
+      "pixel_offset": 489.200121885297,
+      "pwm_command": 1652.8750380891554,
+      "pwm_expected": 1652.8750380891554
+    },
+    {
+      "timestamp": 14.666666666666666,
+      "target_x_px": 1132.9301328796034,
+      "pixel_offset": 492.93013287960343,
+      "pwm_command": 1654.040666524876,
+      "pwm_expected": 1654.040666524876
+    },
+    {
+      "timestamp": 14.7,
+      "target_x_px": 1133.8802802787409,
+      "pixel_offset": 493.8802802787409,
+      "pwm_command": 1654.3375875871066,
+      "pwm_expected": 1654.3375875871066
+    },
+    {
+      "timestamp": 14.733333333333333,
+      "target_x_px": 1136.9242790781464,
+      "pixel_offset": 496.92427907814636,
+      "pwm_command": 1655.2888372119207,
+      "pwm_expected": 1655.2888372119207
+    },
+    {
+      "timestamp": 14.766666666666666,
+      "target_x_px": 1139.3336307593295,
+      "pixel_offset": 499.3336307593295,
+      "pwm_command": 1656.0417596122904,
+      "pwm_expected": 1656.0417596122904
+    },
+    {
+      "timestamp": 14.799999999999999,
+      "target_x_px": 1141.7953274153463,
+      "pixel_offset": 501.79532741534626,
+      "pwm_command": 1656.8110398172958,
+      "pwm_expected": 1656.8110398172958
+    },
+    {
+      "timestamp": 14.833333333333334,
+      "target_x_px": 1144.3685744239322,
+      "pixel_offset": 504.36857442393216,
+      "pwm_command": 1657.6151795074788,
+      "pwm_expected": 1657.6151795074788
+    },
+    {
+      "timestamp": 14.866666666666667,
+      "target_x_px": 1146.9500040114613,
+      "pixel_offset": 506.95000401146126,
+      "pwm_command": 1658.4218762535816,
+      "pwm_expected": 1658.4218762535816
+    },
+    {
+      "timestamp": 14.9,
+      "target_x_px": 1149.5660794955188,
+      "pixel_offset": 509.5660794955188,
+      "pwm_command": 1659.2393998423497,
+      "pwm_expected": 1659.2393998423497
+    },
+    {
+      "timestamp": 14.933333333333334,
+      "target_x_px": 1151.2497742931748,
+      "pixel_offset": 511.2497742931748,
+      "pwm_command": 1659.7655544666172,
+      "pwm_expected": 1659.7655544666172
+    },
+    {
+      "timestamp": 14.966666666666667,
+      "target_x_px": 1154.394921149921,
+      "pixel_offset": 514.394921149921,
+      "pwm_command": 1660.7484128593503,
+      "pwm_expected": 1660.7484128593503
+    },
+    {
+      "timestamp": 15.0,
+      "target_x_px": 1156.4343366544365,
+      "pixel_offset": 516.4343366544365,
+      "pwm_command": 1661.3857302045114,
+      "pwm_expected": 1661.3857302045114
+    },
+    {
+      "timestamp": 15.033333333333333,
+      "target_x_px": 1158.7227057448006,
+      "pixel_offset": 518.7227057448006,
+      "pwm_command": 1662.1008455452502,
+      "pwm_expected": 1662.1008455452502
+    },
+    {
+      "timestamp": 15.066666666666666,
+      "target_x_px": 1161.2622162006767,
+      "pixel_offset": 521.2622162006767,
+      "pwm_command": 1662.8944425627114,
+      "pwm_expected": 1662.8944425627114
+    },
+    {
+      "timestamp": 15.1,
+      "target_x_px": 1162.94507192951,
+      "pixel_offset": 522.94507192951,
+      "pwm_command": 1663.4203349779718,
+      "pwm_expected": 1663.4203349779718
+    },
+    {
+      "timestamp": 15.133333333333333,
+      "target_x_px": 1166.4060754239038,
+      "pixel_offset": 526.4060754239038,
+      "pwm_command": 1664.5018985699699,
+      "pwm_expected": 1664.5018985699699
+    },
+    {
+      "timestamp": 15.166666666666666,
+      "target_x_px": 1168.38777754919,
+      "pixel_offset": 528.3877775491901,
+      "pwm_command": 1665.1211804841219,
+      "pwm_expected": 1665.1211804841219
+    },
+    {
+      "timestamp": 15.2,
+      "target_x_px": 1171.1246918418553,
+      "pixel_offset": 531.1246918418553,
+      "pwm_command": 1665.9764662005798,
+      "pwm_expected": 1665.9764662005798
+    },
+    {
+      "timestamp": 15.233333333333333,
+      "target_x_px": 1173.4106855671398,
+      "pixel_offset": 533.4106855671398,
+      "pwm_command": 1666.6908392397313,
+      "pwm_expected": 1666.6908392397313
+    },
+    {
+      "timestamp": 15.266666666666666,
+      "target_x_px": 1176.2206149215249,
+      "pixel_offset": 536.2206149215249,
+      "pwm_command": 1667.5689421629766,
+      "pwm_expected": 1667.5689421629766
+    },
+    {
+      "timestamp": 15.299999999999999,
+      "target_x_px": 1178.1517831927247,
+      "pixel_offset": 538.1517831927247,
+      "pwm_command": 1668.1724322477264,
+      "pwm_expected": 1668.1724322477264
+    },
+    {
+      "timestamp": 15.333333333333334,
+      "target_x_px": 1181.3701492082635,
+      "pixel_offset": 541.3701492082635,
+      "pwm_command": 1669.1781716275823,
+      "pwm_expected": 1669.1781716275823
+    },
+    {
+      "timestamp": 15.366666666666667,
+      "target_x_px": 1183.3581515037401,
+      "pixel_offset": 543.3581515037401,
+      "pwm_command": 1669.7994223449189,
+      "pwm_expected": 1669.7994223449189
+    },
+    {
+      "timestamp": 15.4,
+      "target_x_px": 1186.3475233144625,
+      "pixel_offset": 546.3475233144625,
+      "pwm_command": 1670.7336010357694,
+      "pwm_expected": 1670.7336010357694
+    },
+    {
+      "timestamp": 15.433333333333334,
+      "target_x_px": 1187.9288724096975,
+      "pixel_offset": 547.9288724096975,
+      "pwm_command": 1671.2277726280304,
+      "pwm_expected": 1671.2277726280304
+    },
+    {
+      "timestamp": 15.466666666666667,
+      "target_x_px": 1191.449428681284,
+      "pixel_offset": 551.449428681284,
+      "pwm_command": 1672.3279464629013,
+      "pwm_expected": 1672.3279464629013
+    },
+    {
+      "timestamp": 15.5,
+      "target_x_px": 1192.8474002366534,
+      "pixel_offset": 552.8474002366534,
+      "pwm_command": 1672.7648125739543,
+      "pwm_expected": 1672.7648125739543
+    },
+    {
+      "timestamp": 15.533333333333333,
+      "target_x_px": 1194.859326383125,
+      "pixel_offset": 554.8593263831251,
+      "pwm_command": 1673.3935394947266,
+      "pwm_expected": 1673.3935394947266
+    },
+    {
+      "timestamp": 15.566666666666666,
+      "target_x_px": 1198.2616738916934,
+      "pixel_offset": 558.2616738916934,
+      "pwm_command": 1674.4567730911542,
+      "pwm_expected": 1674.4567730911542
+    },
+    {
+      "timestamp": 15.6,
+      "target_x_px": 1199.9893835914347,
+      "pixel_offset": 559.9893835914347,
+      "pwm_command": 1674.9966823723234,
+      "pwm_expected": 1674.9966823723234
+    },
+    {
+      "timestamp": 15.633333333333333,
+      "target_x_px": 1203.0802336902188,
+      "pixel_offset": 563.0802336902188,
+      "pwm_command": 1675.9625730281934,
+      "pwm_expected": 1675.9625730281934
+    },
+    {
+      "timestamp": 15.666666666666666,
+      "target_x_px": 1204.776514467331,
+      "pixel_offset": 564.776514467331,
+      "pwm_command": 1676.4926607710408,
+      "pwm_expected": 1676.4926607710408
+    },
+    {
+      "timestamp": 15.7,
+      "target_x_px": 1208.2001005889792,
+      "pixel_offset": 568.2001005889792,
+      "pwm_command": 1677.562531434056,
+      "pwm_expected": 1677.562531434056
+    },
+    {
+      "timestamp": 15.733333333333333,
+      "target_x_px": 1211.2566518313572,
+      "pixel_offset": 571.2566518313572,
+      "pwm_command": 1678.517703697299,
+      "pwm_expected": 1678.517703697299
+    },
+    {
+      "timestamp": 15.766666666666666,
+      "target_x_px": 1212.0289040812042,
+      "pixel_offset": 572.0289040812042,
+      "pwm_command": 1678.7590325253764,
+      "pwm_expected": 1678.7590325253764
+    },
+    {
+      "timestamp": 15.799999999999999,
+      "target_x_px": 1215.2272069918222,
+      "pixel_offset": 575.2272069918222,
+      "pwm_command": 1679.7585021849445,
+      "pwm_expected": 1679.7585021849445
+    },
+    {
+      "timestamp": 15.833333333333334,
+      "target_x_px": 1217.5877153044053,
+      "pixel_offset": 577.5877153044053,
+      "pwm_command": 1680.4961610326266,
+      "pwm_expected": 1680.4961610326266
+    },
+    {
+      "timestamp": 15.866666666666667,
+      "target_x_px": 1219.5408969545715,
+      "pixel_offset": 579.5408969545715,
+      "pwm_command": 1681.1065302983036,
+      "pwm_expected": 1681.1065302983036
+    },
+    {
+      "timestamp": 15.9,
+      "target_x_px": 1222.5839244108038,
+      "pixel_offset": 582.5839244108038,
+      "pwm_command": 1682.0574763783761,
+      "pwm_expected": 1682.0574763783761
+    },
+    {
+      "timestamp": 15.933333333333334,
+      "target_x_px": 1225.2546960065222,
+      "pixel_offset": 585.2546960065222,
+      "pwm_command": 1682.8920925020382,
+      "pwm_expected": 1682.8920925020382
+    },
+    {
+      "timestamp": 15.966666666666667,
+      "target_x_px": 1227.8265503067828,
+      "pixel_offset": 587.8265503067828,
+      "pwm_command": 1683.6957969708697,
+      "pwm_expected": 1683.6957969708697
+    }
+  ]
+}
